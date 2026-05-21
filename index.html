@@ -17,7 +17,7 @@
       --border-hover: rgba(255,255,255,0.18);
       --text: #E8E6F2;
       --text-muted: rgba(232,230,242,0.65);
-      --text-dim: rgba(232,230,242,0.40);
+      --text-dim: rgba(232,230,242,0.38);
       --radius: 14px;
       --radius-sm: 8px;
       --green: #34D399;
@@ -44,7 +44,7 @@
         --border-hover: rgba(0,0,0,0.18);
         --text: #1C1B2E;
         --text-muted: rgba(28,27,46,0.68);
-        --text-dim: rgba(28,27,46,0.45);
+        --text-dim: rgba(28,27,46,0.42);
         --green-bg: rgba(5,150,105,0.08);
         --green-border: rgba(5,150,105,0.20);
         --orange-bg: rgba(234,88,12,0.08);
@@ -65,24 +65,16 @@
     }
 
     header {
-      max-width: 960px;
-      margin: 0 auto 24px;
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
+      max-width: 960px; margin: 0 auto 24px;
+      display: flex; align-items: baseline; gap: 12px;
     }
-
     header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
     #last-updated { font-size: 0.8rem; color: var(--text-dim); }
 
     .grid {
-      max-width: 960px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      max-width: 960px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
     }
-
     @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
 
     .panel {
@@ -93,33 +85,24 @@
       overflow: hidden;
     }
 
+    /* Panel header */
     .panel-header {
       padding: 14px 18px 12px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
     }
-
     .fh-logo {
-      width: 36px; height: 36px;
-      border-radius: 6px;
-      object-fit: contain;
-      flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 6px;
+      object-fit: contain; flex-shrink: 0;
       background: rgba(255,255,255,0.06);
     }
-
     .panel-title-group { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-
     .panel-title-link {
-      font-size: 1rem; font-weight: 600;
-      color: var(--text); text-decoration: none;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 1rem; font-weight: 600; color: var(--text);
+      text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .panel-title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-
     .day-badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; color: var(--text-dim); }
-
     .summary-badge {
       font-size: 0.75rem; font-weight: 600;
       padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
@@ -128,66 +111,78 @@
     .summary-badge.alert  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
     .summary-badge.loading { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
-    .obit-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    /* Section labels */
+    .week-section-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--orange); padding: 10px 14px 3px;
+    }
+    .older-section-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--text-dim); padding: 10px 14px 3px;
+    }
 
+    /* Card list */
+    .obit-list { padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Obit card */
     .obit-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      cursor: pointer; text-decoration: none; display: block; color: inherit;
+      padding: 11px 12px;
+      text-decoration: none; display: block; color: inherit;
       transition: border-color 0.15s, background 0.15s;
     }
     .obit-card:hover { border-color: var(--border-hover); background: var(--surface-hover); }
     .obit-card.recent { background: var(--orange-bg); border-color: var(--orange-border); }
     .obit-card.recent:hover { filter: brightness(1.08); }
 
-    /* Card header: photo + name/meta */
-    .obit-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-
+    /* Card top: photo + name */
+    .obit-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
     .obit-photo {
-      width: 48px; height: 60px;
-      object-fit: cover; border-radius: 5px;
-      flex-shrink: 0;
-      background: var(--surface);
+      width: 44px; height: 56px; object-fit: cover;
+      border-radius: 4px; flex-shrink: 0; background: var(--surface);
+    }
+    .obit-info { flex: 1; min-width: 0; padding-top: 1px; }
+    .obit-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
+    .obit-meta { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; }
+
+    /* Service table */
+    .svc-wrap { overflow-x: auto; margin-top: 2px; }
+
+    .svc-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.74rem; min-width: 260px;
     }
 
-    .obit-info { flex: 1; min-width: 0; }
-
-    .obit-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
-
-    .obit-meta { font-size: 0.73rem; color: var(--text-dim); }
-
-    /* Service events */
-    .services-label {
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+    .svc-table thead th {
+      text-align: left; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--text-dim); padding: 0 6px 5px 0;
+      border-bottom: 1px solid var(--border);
     }
+    .svc-table thead th:last-child { padding-right: 0; }
 
-    .service-line {
-      font-size: 0.78rem; color: var(--text-muted);
-      line-height: 1.5; padding: 1px 0;
+    .svc-table tbody tr { border-top: 1px solid var(--border); }
+    .svc-table tbody tr:first-child { border-top: none; }
+
+    .svc-table td {
+      padding: 5px 6px 5px 0;
+      vertical-align: top;
+      line-height: 1.4;
     }
+    .svc-table td:last-child { padding-right: 0; }
 
-    /* Regex highlights */
-    .hl-date { color: var(--blue); font-weight: 600; }
-    .hl-time { color: var(--teal); font-weight: 600; }
-    .hl-loc  { color: var(--orange); font-weight: 500; }
+    .svc-type { font-weight: 600; color: var(--text); white-space: nowrap; }
+    .svc-date { color: var(--blue); }
+    .svc-time { color: var(--teal); white-space: nowrap; }
+    .svc-loc  { color: var(--orange); }
 
-    .no-services { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+    .no-services { font-size: 0.75rem; color: var(--text-dim); font-style: italic; margin-top: 4px; }
 
     .empty-state  { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
     .error-state  { padding: 20px 18px; font-size: 0.82rem; color: var(--red); }
     .loading-state { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
-
-    .week-section-label {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: var(--orange); padding: 8px 14px 2px;
-    }
-    .older-section-label {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: var(--text-dim); padding: 8px 14px 2px;
-    }
   </style>
 </head>
 <body>
@@ -228,28 +223,25 @@
   const RECENT_DAYS  = 7;
   const IMG_BASE     = 'https://d1q40j6jx1d8h6.cloudfront.net/';
 
-  // ── Dates ─────────────────────────────────────────────────────────────────
+  // ── Date helpers ───────────────────────────────────────────────────────────
 
   function parseDate(str) {
     if (!str) return null;
     const d = new Date(str);
     return isNaN(d.getTime()) ? null : d;
   }
-
   function fmt(date) {
     if (!date) return '';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
-
-  function calcAge(birthStr, deathStr) {
-    const b = parseDate(birthStr), d = parseDate(deathStr);
-    if (!b || !d) return null;
-    let age = d.getFullYear() - b.getFullYear();
-    const m = d.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && d.getDate() < b.getDate())) age--;
+  function calcAge(b, d) {
+    const born = parseDate(b), died = parseDate(d);
+    if (!born || !died) return null;
+    let age = died.getFullYear() - born.getFullYear();
+    const m = died.getMonth() - born.getMonth();
+    if (m < 0 || (m === 0 && died.getDate() < born.getDate())) age--;
     return age >= 0 ? age : null;
   }
-
   function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
   function isRecent(date, now) {
     if (!date) return false;
@@ -262,68 +254,116 @@
     return d >= 0 && d <= LOOKBACK_DAYS;
   }
 
-  // ── Service text parsing ───────────────────────────────────────────────────
+  // ── Service event parser ───────────────────────────────────────────────────
 
-  const SERVICE_KW = /visitation|viewing|wake|graveside|funeral\s+service|funeral|burial|interment|committal|memorial\s+service|memorial|celebration\s+of\s+life|reception|procession/i;
-
-  // Regex highlight patterns — order matters (longest/most-specific first)
-  const HL_PATTERNS = [
-    // Date: optional weekday + month + day (+ optional year)
-    {
-      re: /\b(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?\b/gi,
-      cls: 'hl-date',
-    },
-    // Time range or single time  e.g. "4pm – 6pm", "11:00 am"
-    {
-      re: /\b\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?(?:\s*[–\-]\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?\b/gi,
-      cls: 'hl-time',
-    },
-    // Location: "at [Capital word ...]" up to comma/period/end
-    {
-      re: /\bat\s+[A-Z][^.,;\n]*/g,
-      cls: 'hl-loc',
-    },
+  const EVENT_TYPES = [
+    { re: /celebration\s+of\s+life/i,                                   label: 'Celebration of Life' },
+    { re: /receiving\s+(?:of\s+)?friends|receive\s+friends|visitation|viewing|wake/i, label: 'Visitation' },
+    { re: /graveside/i,                                                  label: 'Graveside' },
+    { re: /funeral\s+service|funeral/i,                                  label: 'Funeral Service' },
+    { re: /memorial\s+service|memorial/i,                                label: 'Memorial Service' },
+    { re: /laid\s+to\s+rest|resting\s+place/i,                          label: 'Burial' },
+    { re: /committal|entombment|interment|burial/i,                     label: 'Burial' },
+    { re: /reception/i,                                                  label: 'Reception' },
+    { re: /procession/i,                                                 label: 'Procession' },
   ];
 
-  function highlightServiceText(text) {
-    // Collect all non-overlapping match ranges across all patterns
-    const marks = [];
-    for (const { re, cls } of HL_PATTERNS) {
-      re.lastIndex = 0;
-      let m;
-      while ((m = re.exec(text)) !== null) {
-        marks.push({ start: m.index, end: m.index + m[0].length, cls });
-      }
-    }
-    marks.sort((a, b) => a.start - b.start);
-
-    // Remove overlaps (keep whichever starts first)
-    const resolved = [];
-    let cursor = 0;
-    for (const mark of marks) {
-      if (mark.start >= cursor) { resolved.push(mark); cursor = mark.end; }
-    }
-
-    // Build HTML
-    let html = '', pos = 0;
-    for (const { start, end, cls } of resolved) {
-      html += escHtml(text.slice(pos, start));
-      html += `<span class="${cls}">${escHtml(text.slice(start, end))}</span>`;
-      pos = end;
-    }
-    html += escHtml(text.slice(pos));
-    return html;
+  function splitSentences(text) {
+    // Protect common abbreviations before splitting on ". Capital"
+    const escaped = text.replace(
+      /\b(Dr|Mr|Mrs|Ms|Rev|Prof|St|Ave|Blvd|Rd|Hwy|Mt|Ln|Jr|Sr|Cpl|Sgt|Lt|Col|Gen|Pvt|Cpt|vs)\./gi,
+      '$1\x00'
+    );
+    return escaped
+      .split(/\.\s+(?=[A-Z])/)
+      .map(s => s.replace(/\x00/g, '.').trim())
+      .filter(s => s.length > 10);
   }
 
-  function serviceLines(description) {
+  function extractDate(sentence) {
+    // Full date: optional weekday + month name + day number + optional year
+    const full = sentence.match(
+      /(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?/i
+    );
+    if (full) return full[0];
+    // Fallback: bare weekday followed by "at", comma, or digit
+    const day = sentence.match(
+      /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b(?=\s*(?:,|\d|\bat\b|$))/i
+    );
+    return day ? day[0] : '';
+  }
+
+  function extractTime(sentence) {
+    // "from X to/- Y pm" (no am/pm on first digit)
+    const range = sentence.match(
+      /from\s+\d{1,2}(?::\d{2})?\s*(?:to|[–\-])\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?/i
+    );
+    if (range) return range[0];
+    // Standard: "7:00 pm" or "5:00 – 7:00 pm"
+    const std = sentence.match(
+      /\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?(?:\s*[–\-]\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?/i
+    );
+    return std ? std[0] : '';
+  }
+
+  function extractLocation(sentence) {
+    // Split on " at " or " in ", iterate from end to find first capital-starting non-time segment
+    const parts = sentence.split(/\s+(?:at|in)\s+/i);
+    for (let i = parts.length - 1; i >= 1; i--) {
+      const part = parts[i].trim();
+      if (/^\d/.test(part)) continue;                          // skip times
+      if (/^https?:|\.com\b|\.org\b|\.net\b/.test(part)) continue; // skip URLs
+      if (!/^[A-Z]/.test(part)) continue;                     // must start uppercase
+      let loc = part
+        .split(/\s+(?:with|for|located|officiated|officiating|prior|during|and\s+the\b)\b/i)[0]
+        .replace(/[.,;]?\s*$/, '')
+        .trim();
+      if (loc.length > 2) return loc;
+    }
+    return '';
+  }
+
+  function parseServiceEvents(description) {
     if (!description) return [];
     const doc = new DOMParser().parseFromString(description, 'text/html');
-    return Array.from(doc.querySelectorAll('p, li'))
+    const paragraphs = Array.from(doc.querySelectorAll('p, li'))
       .map(el => el.textContent.trim())
-      .filter(t => t.length > 15 && SERVICE_KW.test(t));
+      .filter(t => t.length > 10);
+
+    const events = [];
+    for (const para of paragraphs) {
+      for (const sentence of splitSentences(para)) {
+        let label = null;
+        for (const { re, label: l } of EVENT_TYPES) {
+          if (re.test(sentence)) { label = l; break; }
+        }
+        if (!label) continue;
+        events.push({
+          type:     label,
+          date:     extractDate(sentence),
+          time:     extractTime(sentence),
+          location: extractLocation(sentence),
+        });
+      }
+    }
+
+    // Deduplicate: same type + date + time
+    const seen = new Set();
+    return events.filter(e => {
+      const key = `${e.type}|${e.date}|${e.time}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
-  // ── URLs ───────────────────────────────────────────────────────────────────
+  // ── Card / panel rendering ─────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   function obituaryUrl(obit, baseUrl) {
     const name = (obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`)
@@ -333,30 +373,20 @@
 
   function thumbnailUrl(obit) {
     if (!obit.ThumbnailUrl) return null;
-    // Prefer WebP variant
-    const webp = obit.ThumbnailUrl.replace(/\.jpg$/i, '.webp');
-    return IMG_BASE + webp;
-  }
-
-  // ── Rendering ──────────────────────────────────────────────────────────────
-
-  function escHtml(str) {
-    return String(str || '')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return IMG_BASE + obit.ThumbnailUrl.replace(/\.jpg$/i, '.webp');
   }
 
   function renderCard(obit, now, highlight, baseUrl) {
-    const death      = parseDate(obit.DeathDate);
-    const lastSvc    = parseDate(obit.LastServiceDate);
-    const hasRecent  = isRecent(lastSvc, now);
-    const age        = calcAge(obit.BirthDate, obit.DeathDate);
-    const thumb      = thumbnailUrl(obit);
-    const lines      = serviceLines(obit.Description);
-    const url        = baseUrl ? obituaryUrl(obit, baseUrl) : (obit.StoreUrl || '#');
+    const death     = parseDate(obit.DeathDate);
+    const lastSvc   = parseDate(obit.LastServiceDate);
+    const hasRecent = isRecent(lastSvc, now);
+    const age       = calcAge(obit.BirthDate, obit.DeathDate);
+    const thumb     = thumbnailUrl(obit);
+    const url       = baseUrl ? obituaryUrl(obit, baseUrl) : (obit.StoreUrl || '#');
+    const events    = parseServiceEvents(obit.Description);
 
     const metaParts = [];
-    if (death)      metaParts.push(`Died ${fmt(death)}`);
+    if (death) metaParts.push(`Died ${fmt(death)}`);
     if (age != null) metaParts.push(`Age ${age}`);
     if (obit.PlaceOfResidence) metaParts.push(escHtml(obit.PlaceOfResidence));
 
@@ -365,14 +395,36 @@
       : '';
 
     let svcHtml = '';
-    if (lines.length > 0) {
-      svcHtml += '<div class="services-label">Services</div>';
-      for (const line of lines) {
-        svcHtml += `<div class="service-line">${highlightServiceText(line)}</div>`;
+    if (events.length > 0) {
+      let rows = '';
+      for (const e of events) {
+        rows += `<tr>
+          <td class="svc-type">${escHtml(e.type)}</td>
+          <td class="svc-date">${escHtml(e.date)}</td>
+          <td class="svc-time">${escHtml(e.time)}</td>
+          <td class="svc-loc">${escHtml(e.location)}</td>
+        </tr>`;
       }
+      svcHtml = `<div class="svc-wrap">
+        <table class="svc-table">
+          <thead><tr>
+            <th>Event</th><th>Date</th><th>Time</th><th>Location</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
     } else if (lastSvc) {
-      svcHtml += '<div class="services-label">Services</div>';
-      svcHtml += `<div class="service-line">${fmt(lastSvc)}${obit.ServingLocationName ? ' — ' + escHtml(obit.ServingLocationName) : ''}</div>`;
+      svcHtml = `<div class="svc-wrap">
+        <table class="svc-table">
+          <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+          <tbody><tr>
+            <td class="svc-type">Service</td>
+            <td class="svc-date">${escHtml(fmt(lastSvc))}</td>
+            <td class="svc-time"></td>
+            <td class="svc-loc">${escHtml(obit.ServingLocationName || '')}</td>
+          </tr></tbody>
+        </table>
+      </div>`;
     } else {
       svcHtml = '<div class="no-services">No service details found</div>';
     }
@@ -413,18 +465,15 @@
 
     let html = '';
     if (thisWeek.length > 0) {
-      html += '<div class="week-section-label">Services This Week</div>';
-      html += '<div class="obit-list">';
+      html += '<div class="week-section-label">Services This Week</div><div class="obit-list">';
       for (const o of thisWeek) html += renderCard(o, now, true, baseUrl);
       html += '</div>';
     }
     if (older.length > 0) {
-      html += '<div class="older-section-label">Older (past 30 days)</div>';
-      html += '<div class="obit-list">';
+      html += '<div class="older-section-label">Older (past 30 days)</div><div class="obit-list">';
       for (const o of older) html += renderCard(o, now, false, baseUrl);
       html += '</div>';
     }
-
     bodyEl.innerHTML = html;
   }
 
@@ -436,7 +485,7 @@
       const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
       renderPanel(bodyEl, badgeEl, list, baseUrl);
     } catch (err) {
-      bodyEl.innerHTML = `<div class="error-state">Error loading data: ${escHtml(err.message)}</div>`;
+      bodyEl.innerHTML = `<div class="error-state">Error: ${escHtml(err.message)}</div>`;
       badgeEl.textContent = 'Error';
       badgeEl.className = 'summary-badge loading';
     }
