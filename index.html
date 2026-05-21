@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obituary Checker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0D0C18;
+      --surface: rgba(255,255,255,0.06);
+      --surface-hover: rgba(255,255,255,0.10);
+      --card-bg: #1C1B2E;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.55);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
+      --text: #E8E6F2;
+      --text-muted: rgba(232,230,242,0.65);
+      --text-dim: rgba(232,230,242,0.40);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --green: #34D399;
+      --green-bg: rgba(52,211,153,0.12);
+      --green-border: rgba(52,211,153,0.25);
+      --orange: #FB923C;
+      --orange-bg: rgba(251,146,60,0.12);
+      --orange-border: rgba(251,146,60,0.30);
+      --red: #F87171;
+      --red-bg: rgba(248,113,113,0.12);
+      --red-border: rgba(248,113,113,0.30);
+      --blue: #60A5FA;
+      --teal: #2DD4BF;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #F0EEF8;
+        --surface: rgba(0,0,0,0.04);
+        --surface-hover: rgba(0,0,0,0.07);
+        --card-bg: #FFFFFF;
+        --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        --border: rgba(0,0,0,0.08);
+        --border-hover: rgba(0,0,0,0.18);
+        --text: #1C1B2E;
+        --text-muted: rgba(28,27,46,0.68);
+        --text-dim: rgba(28,27,46,0.45);
+        --green-bg: rgba(5,150,105,0.08);
+        --green-border: rgba(5,150,105,0.20);
+        --orange-bg: rgba(234,88,12,0.08);
+        --orange-border: rgba(234,88,12,0.22);
+        --red-bg: rgba(220,38,38,0.08);
+        --red-border: rgba(220,38,38,0.22);
+        --blue: #2563EB;
+        --teal: #0D9488;
+      }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 24px 20px;
+    }
+
+    header {
+      max-width: 960px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+    #last-updated { font-size: 0.8rem; color: var(--text-dim); }
+
+    .grid {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fh-logo {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      object-fit: contain;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .panel-title-group { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+    .panel-title-link {
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); text-decoration: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .panel-title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    .day-badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; color: var(--text-dim); }
+
+    .summary-badge {
+      font-size: 0.75rem; font-weight: 600;
+      padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
+    }
+    .summary-badge.clean  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+    .summary-badge.alert  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+    .summary-badge.loading { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+
+    .obit-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+    .obit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer; text-decoration: none; display: block; color: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .obit-card:hover { border-color: var(--border-hover); background: var(--surface-hover); }
+    .obit-card.recent { background: var(--orange-bg); border-color: var(--orange-border); }
+    .obit-card.recent:hover { filter: brightness(1.08); }
+
+    /* Card header: photo + name/meta */
+    .obit-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+
+    .obit-photo {
+      width: 48px; height: 60px;
+      object-fit: cover; border-radius: 5px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .obit-info { flex: 1; min-width: 0; }
+
+    .obit-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+
+    .obit-meta { font-size: 0.73rem; color: var(--text-dim); }
+
+    /* Service events */
+    .services-label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+    }
+
+    .service-line {
+      font-size: 0.78rem; color: var(--text-muted);
+      line-height: 1.5; padding: 1px 0;
+    }
+
+    /* Regex highlights */
+    .hl-date { color: var(--blue); font-weight: 600; }
+    .hl-time { color: var(--teal); font-weight: 600; }
+    .hl-loc  { color: var(--orange); font-weight: 500; }
+
+    .no-services { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+
+    .empty-state  { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+    .error-state  { padding: 20px 18px; font-size: 0.82rem; color: var(--red); }
+    .loading-state { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+
+    .week-section-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--orange); padding: 8px 14px 2px;
+    }
+    .older-section-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--text-dim); padding: 8px 14px 2px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Obituary Checker</h1>
+  <span id="last-updated"></span>
+</header>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-header">
+      <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/ac386460-9069-4d71-8a48-0a6ab1f5f511/562b11ff-74cb-4d66-b951-c27101f19437_thumbnail.webp" alt="Oakley-Cook logo">
+      <div class="panel-title-group">
+        <a class="panel-title-link" href="https://www.oakley-cook.com/obituaries/obituary-listings?page=1" target="_blank" rel="noopener">Oakley-Cook</a>
+        <span class="day-badge">WED</span>
+      </div>
+      <span class="summary-badge loading" id="oc-badge">Loading...</span>
+    </div>
+    <div id="oc-body"><div class="loading-state">Loading...</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/67518621-83f9-4a0d-aa33-7b11c4c73ce9/068b181f-349e-43a2-8451-f771d5b2d275_thumbnail.webp" alt="Akard logo">
+      <div class="panel-title-group">
+        <a class="panel-title-link" href="https://www.akardfuneralhome.com/obituaries/obituary-listings?page=1" target="_blank" rel="noopener">Akard</a>
+        <span class="day-badge">THU</span>
+      </div>
+      <span class="summary-badge loading" id="ak-badge">Loading...</span>
+    </div>
+    <div id="ak-body"><div class="loading-state">Loading...</div></div>
+  </div>
+</div>
+
+<script>
+  const LOOKBACK_DAYS = 30;
+  const RECENT_DAYS  = 7;
+  const IMG_BASE     = 'https://d1q40j6jx1d8h6.cloudfront.net/';
+
+  // ── Dates ─────────────────────────────────────────────────────────────────
+
+  function parseDate(str) {
+    if (!str) return null;
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function fmt(date) {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function calcAge(birthStr, deathStr) {
+    const b = parseDate(birthStr), d = parseDate(deathStr);
+    if (!b || !d) return null;
+    let age = d.getFullYear() - b.getFullYear();
+    const m = d.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && d.getDate() < b.getDate())) age--;
+    return age >= 0 ? age : null;
+  }
+
+  function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+  function isRecent(date, now) {
+    if (!date) return false;
+    const d = daysBetween(date, now);
+    return d >= 0 && d <= RECENT_DAYS;
+  }
+  function isWithinLookback(date, now) {
+    if (!date) return false;
+    const d = daysBetween(date, now);
+    return d >= 0 && d <= LOOKBACK_DAYS;
+  }
+
+  // ── Service text parsing ───────────────────────────────────────────────────
+
+  const SERVICE_KW = /visitation|viewing|wake|graveside|funeral\s+service|funeral|burial|interment|committal|memorial\s+service|memorial|celebration\s+of\s+life|reception|procession/i;
+
+  // Regex highlight patterns — order matters (longest/most-specific first)
+  const HL_PATTERNS = [
+    // Date: optional weekday + month + day (+ optional year)
+    {
+      re: /\b(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?\b/gi,
+      cls: 'hl-date',
+    },
+    // Time range or single time  e.g. "4pm – 6pm", "11:00 am"
+    {
+      re: /\b\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?(?:\s*[–\-]\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?\b/gi,
+      cls: 'hl-time',
+    },
+    // Location: "at [Capital word ...]" up to comma/period/end
+    {
+      re: /\bat\s+[A-Z][^.,;\n]*/g,
+      cls: 'hl-loc',
+    },
+  ];
+
+  function highlightServiceText(text) {
+    // Collect all non-overlapping match ranges across all patterns
+    const marks = [];
+    for (const { re, cls } of HL_PATTERNS) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        marks.push({ start: m.index, end: m.index + m[0].length, cls });
+      }
+    }
+    marks.sort((a, b) => a.start - b.start);
+
+    // Remove overlaps (keep whichever starts first)
+    const resolved = [];
+    let cursor = 0;
+    for (const mark of marks) {
+      if (mark.start >= cursor) { resolved.push(mark); cursor = mark.end; }
+    }
+
+    // Build HTML
+    let html = '', pos = 0;
+    for (const { start, end, cls } of resolved) {
+      html += escHtml(text.slice(pos, start));
+      html += `<span class="${cls}">${escHtml(text.slice(start, end))}</span>`;
+      pos = end;
+    }
+    html += escHtml(text.slice(pos));
+    return html;
+  }
+
+  function serviceLines(description) {
+    if (!description) return [];
+    const doc = new DOMParser().parseFromString(description, 'text/html');
+    return Array.from(doc.querySelectorAll('p, li'))
+      .map(el => el.textContent.trim())
+      .filter(t => t.length > 15 && SERVICE_KW.test(t));
+  }
+
+  // ── URLs ───────────────────────────────────────────────────────────────────
+
+  function obituaryUrl(obit, baseUrl) {
+    const name = (obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`)
+      .trim().replace(/\s+/g, '-');
+    return `${baseUrl}${name}?obId=${obit.Id}`;
+  }
+
+  function thumbnailUrl(obit) {
+    if (!obit.ThumbnailUrl) return null;
+    // Prefer WebP variant
+    const webp = obit.ThumbnailUrl.replace(/\.jpg$/i, '.webp');
+    return IMG_BASE + webp;
+  }
+
+  // ── Rendering ──────────────────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderCard(obit, now, highlight, baseUrl) {
+    const death      = parseDate(obit.DeathDate);
+    const lastSvc    = parseDate(obit.LastServiceDate);
+    const hasRecent  = isRecent(lastSvc, now);
+    const age        = calcAge(obit.BirthDate, obit.DeathDate);
+    const thumb      = thumbnailUrl(obit);
+    const lines      = serviceLines(obit.Description);
+    const url        = baseUrl ? obituaryUrl(obit, baseUrl) : (obit.StoreUrl || '#');
+
+    const metaParts = [];
+    if (death)      metaParts.push(`Died ${fmt(death)}`);
+    if (age != null) metaParts.push(`Age ${age}`);
+    if (obit.PlaceOfResidence) metaParts.push(escHtml(obit.PlaceOfResidence));
+
+    const photoHtml = thumb
+      ? `<img class="obit-photo" src="${escHtml(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : '';
+
+    let svcHtml = '';
+    if (lines.length > 0) {
+      svcHtml += '<div class="services-label">Services</div>';
+      for (const line of lines) {
+        svcHtml += `<div class="service-line">${highlightServiceText(line)}</div>`;
+      }
+    } else if (lastSvc) {
+      svcHtml += '<div class="services-label">Services</div>';
+      svcHtml += `<div class="service-line">${fmt(lastSvc)}${obit.ServingLocationName ? ' — ' + escHtml(obit.ServingLocationName) : ''}</div>`;
+    } else {
+      svcHtml = '<div class="no-services">No service details found</div>';
+    }
+
+    return `<a class="obit-card${highlight && hasRecent ? ' recent' : ''}" href="${escHtml(url)}" target="_blank" rel="noopener">
+      <div class="obit-header">
+        ${photoHtml}
+        <div class="obit-info">
+          <div class="obit-name">${escHtml(obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`.trim())}</div>
+          <div class="obit-meta">${metaParts.join(' · ')}</div>
+        </div>
+      </div>
+      ${svcHtml}
+    </a>`;
+  }
+
+  function renderPanel(bodyEl, badgeEl, obituaries, baseUrl) {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    const relevant = obituaries
+      .filter(o => isWithinLookback(parseDate(o.DeathDate), now))
+      .sort((a, b) => (parseDate(b.DeathDate) || 0) - (parseDate(a.DeathDate) || 0));
+
+    const recentCount = relevant.filter(o => isRecent(parseDate(o.LastServiceDate), now)).length;
+    badgeEl.textContent = recentCount > 0
+      ? `${recentCount} service${recentCount > 1 ? 's' : ''} this week`
+      : 'No services this week';
+    badgeEl.className = 'summary-badge ' + (recentCount > 0 ? 'alert' : 'clean');
+
+    if (relevant.length === 0) {
+      bodyEl.innerHTML = '<div class="empty-state">No recent obituaries found.</div>';
+      return;
+    }
+
+    const thisWeek = relevant.filter(o => isRecent(parseDate(o.LastServiceDate), now));
+    const older    = relevant.filter(o => !isRecent(parseDate(o.LastServiceDate), now));
+
+    let html = '';
+    if (thisWeek.length > 0) {
+      html += '<div class="week-section-label">Services This Week</div>';
+      html += '<div class="obit-list">';
+      for (const o of thisWeek) html += renderCard(o, now, true, baseUrl);
+      html += '</div>';
+    }
+    if (older.length > 0) {
+      html += '<div class="older-section-label">Older (past 30 days)</div>';
+      html += '<div class="obit-list">';
+      for (const o of older) html += renderCard(o, now, false, baseUrl);
+      html += '</div>';
+    }
+
+    bodyEl.innerHTML = html;
+  }
+
+  async function loadPanel(endpoint, bodyEl, badgeEl, baseUrl) {
+    try {
+      const res  = await fetch(endpoint);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
+      renderPanel(bodyEl, badgeEl, list, baseUrl);
+    } catch (err) {
+      bodyEl.innerHTML = `<div class="error-state">Error loading data: ${escHtml(err.message)}</div>`;
+      badgeEl.textContent = 'Error';
+      badgeEl.className = 'summary-badge loading';
+    }
+  }
+
+  document.getElementById('last-updated').textContent =
+    'Updated ' + new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+  loadPanel('/api/oakley-cook', document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/');
+  loadPanel('/api/akard',       document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/');
+</script>
+</body>
+</html>
