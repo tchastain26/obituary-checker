@@ -202,49 +202,56 @@
     .obit-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
     .obit-meta { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; }
 
-    /* ── Service table ───────────────────────────────────────────────────── */
+    /* ── Highlighted service sentences ──────────────────────────────────── */
 
-    .svc-wrap { overflow-x: auto; margin-top: 2px; padding-bottom: 10px; }
+    .svc-lines { padding: 0 0 10px; }
+    .svc-line  { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; padding: 1px 0; }
+    .hl-date   { color: var(--blue);   font-weight: 600; }
+    .hl-time   { color: var(--teal);   font-weight: 600; }
+    .hl-loc    { color: var(--orange); font-weight: 500; }
+
+    /* ── Service details table (lazy-loaded) ─────────────────────────────── */
 
     .svc-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 0.74rem; min-width: 260px;
+      width: 100%; border-collapse: collapse; font-size: 0.74rem;
     }
     .svc-table thead th {
       text-align: left; font-size: 0.62rem; font-weight: 700;
       letter-spacing: 0.07em; text-transform: uppercase;
-      color: var(--text-dim); padding: 0 6px 5px 0;
+      color: var(--text-dim); padding: 0 8px 5px 0;
       border-bottom: 1px solid var(--border);
     }
-    .svc-table thead th:last-child { padding-right: 0; }
     .svc-table tbody tr { border-top: 1px solid var(--border); }
     .svc-table tbody tr:first-child { border-top: none; }
-    .svc-table td { padding: 5px 6px 5px 0; vertical-align: top; line-height: 1.4; }
-    .svc-table td:last-child { padding-right: 0; }
-    .svc-type { font-weight: 600; color: var(--text); white-space: nowrap; }
-    .svc-date { color: var(--blue); }
-    .svc-time { color: var(--teal); white-space: nowrap; }
-    .svc-loc  { color: var(--orange); }
+    .svc-table td { padding: 5px 8px 5px 0; vertical-align: top; line-height: 1.4; }
+    .svc-type  { font-weight: 600; color: var(--text); white-space: nowrap; }
+    .svc-date  { color: var(--blue);   white-space: nowrap; }
+    .svc-time  { color: var(--teal);   white-space: nowrap; }
+    .svc-loc   { color: var(--orange); }
+    .svc-addr  { font-size: 0.7rem; color: var(--text-dim); margin-top: 1px; }
 
-    /* ── Full obituary collapsible ───────────────────────────────────────── */
+    /* ── Collapsible sections (shared) ───────────────────────────────────── */
 
-    .obit-full {
-      margin-top: 0; border-top: 1px solid var(--border); padding: 0 12px 10px;
+    .obit-detail {
+      border-top: 1px solid var(--border); padding: 0 12px 10px;
     }
-    .obit-full summary {
+    .obit-detail summary {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--text-dim);
       cursor: pointer; user-select: none; padding: 8px 0 0;
       list-style: none; display: flex; align-items: center; gap: 4px;
     }
-    .obit-full summary::-webkit-details-marker { display: none; }
-    .obit-full summary::after { content: '▾'; }
-    .obit-full[open] summary::after { content: '▴'; }
+    .obit-detail summary::-webkit-details-marker { display: none; }
+    .obit-detail summary::after { content: '▾'; }
+    .obit-detail[open] summary::after { content: '▴'; }
+    .obit-detail-body { margin-top: 8px; }
+
     .obit-full-text {
-      margin-top: 8px;
       font-size: 0.75rem; color: var(--text-muted);
       line-height: 1.65; white-space: pre-wrap;
     }
+    .svc-detail-loading { font-size: 0.75rem; color: var(--text-dim); font-style: italic; }
+    .svc-detail-error   { font-size: 0.75rem; color: var(--red); }
 
     .no-services { font-size: 0.75rem; color: var(--text-dim); font-style: italic; padding: 0 12px 10px; }
     .empty-state  { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
@@ -504,99 +511,118 @@
 
   renderCalendar(); // render immediately before API data arrives
 
-  // ── Service event parser ──────────────────────────────────────────────────
+  // ── Service text highlighting ─────────────────────────────────────────────
 
-  const EVENT_TYPES = [
-    { re: /celebration\s+of\s+life/i,                                          label: 'Celebration of Life' },
-    { re: /receiving\s+(?:of\s+)?friends|receive\s+friends|visitation|viewing|wake/i, label: 'Visitation' },
-    { re: /graveside/i,                                                         label: 'Graveside' },
-    { re: /funeral\s+(?:mass|service)|funeral/i,                               label: 'Funeral Service' },
-    { re: /memorial\s+service|memorial/i,                                       label: 'Memorial Service' },
-    { re: /laid\s+to\s+rest/i,                                                 label: 'Burial' },
-    { re: /committal|entombment|interment|burial/i,                            label: 'Burial' },
-    { re: /reception/i,                                                         label: 'Reception' },
-    { re: /procession/i,                                                        label: 'Procession' },
+  const SVC_KW = /visitation|viewing|wake|receive\s+friends|receiving|graveside|funeral|burial|interment|committal|memorial|resting|procession|reception|celebration\s+of\s+life|laid\s+to\s+rest/i;
+
+  const HL_PATTERNS = [
+    // Date: optional weekday + month + day + optional year
+    { re: /(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?/gi, cls: 'hl-date' },
+    // Time: "7:00 pm", "5:00 – 7:00 pm", "noon"
+    { re: /\b(?:noon|midnight|\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?(?:\s*[–\-]\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?)?)/gi, cls: 'hl-time' },
+    // Location: "at Chapel/Funeral Home/Cemetery..."
+    { re: /\bat\s+[A-Z][^.,;\n]*/g, cls: 'hl-loc' },
   ];
 
-  const WEEKDAY_PAT = 'Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday';
-  const MONTH_PAT   = 'January|February|March|April|May|June|July|August|September|October|November|December';
-
-  function splitSentences(text) {
-    const esc = text.replace(/\b(Dr|Mr|Mrs|Ms|Rev|Prof|St|Ave|Blvd|Rd|Hwy|Mt|Ln|Jr|Sr|Cpl|Sgt|Lt|Col|Gen|Pvt|Cpt|P\.?M|A\.?M)\./gi, '$1\x00');
-    return esc.split(/\.\s+(?=[A-Z])/)
-      .map(s => s.replace(/\x00/g, '.').trim())
-      .filter(s => s.length > 10);
-  }
-
-  function extractDate(s) {
-    const us = s.match(new RegExp(`(?:(?:${WEEKDAY_PAT}),?\\s+)?(?:${MONTH_PAT})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{4})?`, 'i'));
-    if (us) return us[0];
-    const eu = s.match(new RegExp(`\\b\\d{1,2}\\s+(?:${MONTH_PAT})\\s+\\d{4}`, 'i'));
-    if (eu) return eu[0];
-    const wd = s.match(new RegExp(`\\b(${WEEKDAY_PAT})\\b(?=\\s*(?:,|\\bat\\b|\\bprior\\b|$))`, 'i'));
-    return wd ? wd[0] : '';
-  }
-
-  function extractTime(s) {
-    const std = s.match(/\b\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?(?:\s*[–\-]\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?)?/i);
-    if (std) return std[0];
-    const range = s.match(/from\s+\d{1,4}(?::\d{2})?\s*(?:to|[–\-])\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?/i);
-    if (range) return range[0];
-    const special = s.match(/\b(noon|midnight)\b/i);
-    return special ? special[0] : '';
-  }
-
-  function extractLocation(s) {
-    const atParts = s.split(/\s+at\s+/i);
-    for (let i = atParts.length - 1; i >= 1; i--) {
-      const part = atParts[i].trim();
-      if (/^\d/.test(part)) continue;
-      if (/^https?:|\.com\b|\.org\b|\.net\b/i.test(part)) continue;
-      if (!/^[A-Z'"(]/.test(part)) continue;
-
-      let loc = part.split(new RegExp(
-        `\\s+(?:with|for|located|officiated|officiating|prior|during|until|where\\b` +
-        `|on\\s+(?:${WEEKDAY_PAT})|from\\s+\\d|and\\s+(?:burial|funeral|graveside|interment|the)\\b)`, 'i'
-      ))[0];
-
-      loc = loc.replace(/,\s*\d.*$/, '');
-      loc = loc.replace(/(?:,?\s+|\s+in\s+)[A-Z][a-z][\w ]*,\s*[A-Z]{2}(?:\s+\d{5})?\s*$/i, '');
-      loc = loc.replace(/[.,;]\s*$/, '').trim();
-      if (loc.length > 2) return loc;
-    }
-
-    const inMatch = s.match(/\bin\s+([A-Z][^,.\n]*?(?:Cemetery|Mausoleum|Memorial\s+Park|Memory\s+Gardens|Gardens|Chapel|Park|Church|Cathedral))/i);
-    if (inMatch) return inMatch[1].replace(/[.,;]?\s*$/, '').trim();
-    return '';
-  }
-
-  function parseServiceEvents(description) {
-    if (!description) return [];
-    const doc  = new DOMParser().parseFromString(description, 'text/html');
-    const paras = Array.from(doc.querySelectorAll('p, li'))
-      .map(el => el.textContent.trim()).filter(t => t.length > 10);
-
-    const events = [];
-    for (const para of paras) {
-      for (const sentence of splitSentences(para)) {
-        let label = null;
-        for (const { re, label: l } of EVENT_TYPES) {
-          if (re.test(sentence)) { label = l; break; }
-        }
-        if (!label) continue;
-        const date     = extractDate(sentence);
-        const time     = extractTime(sentence);
-        const location = extractLocation(sentence);
-        if (!date && !time && !location) continue;
-        events.push({ type: label, date, time, location });
+  function highlightServiceText(text) {
+    const marks = [];
+    for (const { re, cls } of HL_PATTERNS) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        marks.push({ start: m.index, end: m.index + m[0].length, cls });
       }
     }
+    marks.sort((a, b) => a.start - b.start);
+    const resolved = [];
+    let cursor = 0;
+    for (const mark of marks) {
+      if (mark.start >= cursor) { resolved.push(mark); cursor = mark.end; }
+    }
+    let html = '', pos = 0;
+    for (const { start, end, cls } of resolved) {
+      html += escHtml(text.slice(pos, start));
+      html += `<span class="${cls}">${escHtml(text.slice(start, end))}</span>`;
+      pos = end;
+    }
+    return html + escHtml(text.slice(pos));
+  }
 
-    const seen = new Set();
-    return events.filter(e => {
-      const key = `${e.type}|${e.date}|${e.time}`;
-      if (seen.has(key)) return false;
-      seen.add(key); return true;
+  function serviceLines(description) {
+    if (!description) return [];
+    const doc = new DOMParser().parseFromString(description, 'text/html');
+    return Array.from(doc.querySelectorAll('p, li'))
+      .map(el => el.textContent.trim())
+      .filter(t => t.length > 15 && SVC_KW.test(t));
+  }
+
+  // ── Service details (lazy-loaded from GetObituaryInfo API) ────────────────
+
+  function fmtIsoTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function fmtIsoDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  function renderServiceTable(services, cemetery) {
+    const rows = services.map(svc => {
+      const name  = escHtml(svc.ServiceEventName || '');
+      const date  = escHtml(fmtIsoDate(svc.StartTime));
+      const start = fmtIsoTime(svc.StartTime);
+      const end   = fmtIsoTime(svc.EndTime);
+      const time  = escHtml(start && end ? `${start} – ${end}` : start);
+      const loc   = svc.ServiceLocation || {};
+      const locName = escHtml(loc.Name || '');
+      const addr    = escHtml(loc.AddressDetails || '');
+      return `<tr>
+        <td class="svc-type">${name}</td>
+        <td class="svc-date">${date}</td>
+        <td class="svc-time">${time}</td>
+        <td class="svc-loc">${locName}${addr ? `<div class="svc-addr">${addr}</div>` : ''}</td>
+      </tr>`;
+    });
+
+    if (cemetery) {
+      const addr = escHtml(cemetery.AddressDetails || '');
+      rows.push(`<tr>
+        <td class="svc-type">Final Resting Place</td>
+        <td class="svc-date"></td>
+        <td class="svc-time"></td>
+        <td class="svc-loc">${escHtml(cemetery.Name || '')}${addr ? `<div class="svc-addr">${addr}</div>` : ''}</td>
+      </tr>`);
+    }
+
+    if (!rows.length) return '<div class="svc-detail-error">No service events found.</div>';
+
+    return `<table class="svc-table">
+      <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table>`;
+  }
+
+  function attachServiceDetails(bodyEl, src) {
+    bodyEl.querySelectorAll('.svc-detail-trigger').forEach(details => {
+      details.addEventListener('toggle', async function onToggle() {
+        if (!this.open) return;
+        this.removeEventListener('toggle', onToggle);
+        const body = this.querySelector('.obit-detail-body');
+        const obId = this.dataset.obId;
+        body.innerHTML = '<div class="svc-detail-loading">Loading...</div>';
+        try {
+          const res = await fetch(`/api/obituary-info?obituaryId=${encodeURIComponent(obId)}&src=${encodeURIComponent(src)}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const { services, cemetery } = await res.json();
+          body.innerHTML = renderServiceTable(services, cemetery);
+        } catch (err) {
+          body.innerHTML = `<div class="svc-detail-error">Could not load: ${escHtml(err.message)}</div>`;
+        }
+      });
     });
   }
 
@@ -627,7 +653,7 @@
     const age       = calcAge(obit.BirthDate, obit.DeathDate);
     const thumb     = thumbnailUrl(obit);
     const url       = baseUrl ? obituaryUrl(obit, baseUrl) : (obit.StoreUrl || '#');
-    const events    = parseServiceEvents(obit.Description);
+    const lines     = serviceLines(obit.Description);
 
     const metaParts = [];
     if (death) metaParts.push(`Died ${fmt(death)}`);
@@ -638,37 +664,25 @@
       ? `<img class="obit-photo" src="${escHtml(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'">`
       : '';
 
+    // Highlighted service sentences
     let svcHtml = '';
-    if (events.length > 0) {
-      const rows = events.map(e => `<tr>
-        <td class="svc-type">${escHtml(e.type)}</td>
-        <td class="svc-date">${escHtml(e.date)}</td>
-        <td class="svc-time">${escHtml(e.time)}</td>
-        <td class="svc-loc">${escHtml(e.location)}</td>
-      </tr>`).join('');
-      svcHtml = `<div class="svc-wrap"><table class="svc-table">
-        <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>`;
-    } else if (lastSvc) {
-      svcHtml = `<div class="svc-wrap"><table class="svc-table">
-        <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
-        <tbody><tr>
-          <td class="svc-type">Service</td>
-          <td class="svc-date">${escHtml(fmt(lastSvc))}</td>
-          <td class="svc-time"></td>
-          <td class="svc-loc">${escHtml(obit.ServingLocationName || '')}</td>
-        </tr></tbody>
-      </table></div>`;
-    } else {
-      svcHtml = '<div class="no-services">No service details posted</div>';
+    if (lines.length > 0) {
+      const lineHtml = lines.map(l => `<div class="svc-line">${highlightServiceText(l)}</div>`).join('');
+      svcHtml = `<div class="svc-lines">${lineHtml}</div>`;
     }
 
-    const fullText    = descriptionToText(obit.Description);
+    // Service Details collapsible (lazy-loaded)
+    const detailSection = `<details class="obit-detail svc-detail-trigger" data-ob-id="${escHtml(String(obit.Id))}">
+      <summary>Service Details</summary>
+      <div class="obit-detail-body"></div>
+    </details>`;
+
+    // Full Obituary collapsible
+    const fullText = descriptionToText(obit.Description);
     const fullSection = fullText
-      ? `<details class="obit-full">
+      ? `<details class="obit-detail">
           <summary>Full Obituary</summary>
-          <div class="obit-full-text">${escHtml(fullText)}</div>
+          <div class="obit-detail-body obit-full-text">${escHtml(fullText)}</div>
         </details>`
       : '';
 
@@ -685,11 +699,12 @@
         </div>
         ${svcHtml}
       </a>
+      ${detailSection}
       ${fullSection}
     </div>`;
   }
 
-  function renderPanel(bodyEl, badgeEl, obituaries, baseUrl) {
+  function renderPanel(bodyEl, badgeEl, obituaries, baseUrl, src) {
     const now = new Date();
     now.setHours(23, 59, 59, 999);
 
@@ -723,16 +738,17 @@
       html += '</div>';
     }
     bodyEl.innerHTML = html;
+    attachServiceDetails(bodyEl, src);
   }
 
-  async function loadPanel(endpoint, bodyEl, badgeEl, baseUrl) {
+  async function loadPanel(endpoint, bodyEl, badgeEl, baseUrl, src) {
     try {
       const res  = await fetch(endpoint);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
-      renderPanel(bodyEl, badgeEl, list, baseUrl);
-      addServiceDates(list);   // mark service days on calendar
+      renderPanel(bodyEl, badgeEl, list, baseUrl, src);
+      addServiceDates(list);
     } catch (err) {
       bodyEl.innerHTML = `<div class="error-state">Error: ${escHtml(err.message)}</div>`;
       badgeEl.textContent = 'Error';
@@ -745,7 +761,6 @@
   document.getElementById('last-updated').textContent =
     'Updated ' + new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-  // Mobile panel collapse
   document.querySelectorAll('.panel-header').forEach(header => {
     header.addEventListener('click', e => {
       if (window.innerWidth > 640) return;
@@ -754,8 +769,8 @@
     });
   });
 
-  loadPanel('/api/oakley-cook', document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/');
-  loadPanel('/api/akard',       document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/');
+  loadPanel('/api/oakley-cook', document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/', 'oakley-cook');
+  loadPanel('/api/akard',       document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/', 'akard');
 </script>
 </body>
 </html>
