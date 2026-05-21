@@ -144,15 +144,20 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 11px 12px;
-      text-decoration: none; display: block; color: inherit;
-      transition: border-color 0.15s, background 0.15s;
+      overflow: hidden;
+      transition: border-color 0.15s;
     }
-    .obit-card:hover { border-color: var(--border-hover); background: var(--surface-hover); }
+    .obit-card:hover { border-color: var(--border-hover); }
+    .obit-card .obit-top-link { padding: 11px 12px 0; }
     .obit-card.recent { background: var(--orange-bg); border-color: var(--orange-border); }
-    .obit-card.recent:hover { filter: brightness(1.08); }
+    .obit-card .obit-full { padding: 0 12px 10px; }
 
     /* Card top: photo + name */
+    .obit-top-link {
+      display: block; text-decoration: none; color: inherit;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .obit-top-link:hover .obit-name { text-decoration: underline; text-underline-offset: 2px; }
     .obit-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
     .obit-photo {
       width: 44px; height: 56px; object-fit: cover;
@@ -163,7 +168,7 @@
     .obit-meta { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; }
 
     /* Service table */
-    .svc-wrap { overflow-x: auto; margin-top: 2px; }
+    .svc-wrap { overflow-x: auto; margin-top: 2px; padding-bottom: 10px; }
 
     .svc-table {
       width: 100%; border-collapse: collapse;
@@ -296,100 +301,110 @@
     return d >= 0 && d <= LOOKBACK_DAYS;
   }
 
-  // ── Service event parser ───────────────────────────────────────────────────
+  // ── Service event parser ──────────────────────────────────────────────────
 
   const EVENT_TYPES = [
-    { re: /celebration\s+of\s+life/i,                                   label: 'Celebration of Life' },
+    { re: /celebration\s+of\s+life/i,                                          label: 'Celebration of Life' },
     { re: /receiving\s+(?:of\s+)?friends|receive\s+friends|visitation|viewing|wake/i, label: 'Visitation' },
-    { re: /graveside/i,                                                  label: 'Graveside' },
-    { re: /funeral\s+service|funeral/i,                                  label: 'Funeral Service' },
-    { re: /memorial\s+service|memorial/i,                                label: 'Memorial Service' },
-    { re: /laid\s+to\s+rest|resting\s+place/i,                          label: 'Burial' },
-    { re: /committal|entombment|interment|burial/i,                     label: 'Burial' },
-    { re: /reception/i,                                                  label: 'Reception' },
-    { re: /procession/i,                                                 label: 'Procession' },
+    { re: /graveside/i,                                                         label: 'Graveside' },
+    { re: /funeral\s+(?:mass|service)|funeral/i,                               label: 'Funeral Service' },
+    { re: /memorial\s+service|memorial/i,                                       label: 'Memorial Service' },
+    { re: /laid\s+to\s+rest/i,                                                 label: 'Burial' },
+    { re: /committal|entombment|interment|burial/i,                            label: 'Burial' },
+    { re: /reception/i,                                                         label: 'Reception' },
+    { re: /procession/i,                                                        label: 'Procession' },
   ];
 
+  const WEEKDAY_PAT = 'Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday';
+  const MONTH_PAT   = 'January|February|March|April|May|June|July|August|September|October|November|December';
+
   function splitSentences(text) {
-    // Protect common abbreviations before splitting on ". Capital"
-    const escaped = text.replace(
-      /\b(Dr|Mr|Mrs|Ms|Rev|Prof|St|Ave|Blvd|Rd|Hwy|Mt|Ln|Jr|Sr|Cpl|Sgt|Lt|Col|Gen|Pvt|Cpt|vs)\./gi,
-      '$1\x00'
-    );
-    return escaped
-      .split(/\.\s+(?=[A-Z])/)
+    const esc = text.replace(/\b(Dr|Mr|Mrs|Ms|Rev|Prof|St|Ave|Blvd|Rd|Hwy|Mt|Ln|Jr|Sr|Cpl|Sgt|Lt|Col|Gen|Pvt|Cpt|P\.?M|A\.?M)\./gi, '$1\x00');
+    return esc.split(/\.\s+(?=[A-Z])/)
       .map(s => s.replace(/\x00/g, '.').trim())
       .filter(s => s.length > 10);
   }
 
-  function extractDate(sentence) {
-    // Full date: optional weekday + month name + day number + optional year
-    const full = sentence.match(
-      /(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?/i
-    );
-    if (full) return full[0];
-    // Fallback: bare weekday followed by "at", comma, or digit
-    const day = sentence.match(
-      /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b(?=\s*(?:,|\d|\bat\b|$))/i
-    );
-    return day ? day[0] : '';
+  function extractDate(s) {
+    // US: [Weekday,] Month D[th][, YYYY]
+    const us = s.match(new RegExp(`(?:(?:${WEEKDAY_PAT}),?\\s+)?(?:${MONTH_PAT})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{4})?`, 'i'));
+    if (us) return us[0];
+    // EU: D Month YYYY  e.g. "19 May 2026"
+    const eu = s.match(new RegExp(`\\b\\d{1,2}\\s+(?:${MONTH_PAT})\\s+\\d{4}`, 'i'));
+    if (eu) return eu[0];
+    // Bare weekday before comma, "at", "prior", or end
+    const wd = s.match(new RegExp(`\\b(${WEEKDAY_PAT})\\b(?=\\s*(?:,|\\bat\\b|\\bprior\\b|$))`, 'i'));
+    return wd ? wd[0] : '';
   }
 
-  function extractTime(sentence) {
-    // "from X to/- Y pm" (no am/pm on first digit)
-    const range = sentence.match(
-      /from\s+\d{1,2}(?::\d{2})?\s*(?:to|[–\-])\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?/i
-    );
+  function extractTime(s) {
+    // Standard first — "7:00 pm", "5:00 – 7:00 pm", also 4-digit "1130 am"
+    const std = s.match(/\b\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?(?:\s*[–\-]\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?)?/i);
+    if (std) return std[0];
+    // "from X to/- Y pm" where first time has no am/pm
+    const range = s.match(/from\s+\d{1,4}(?::\d{2})?\s*(?:to|[–\-])\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?/i);
     if (range) return range[0];
-    // Standard: "7:00 pm" or "5:00 – 7:00 pm"
-    const std = sentence.match(
-      /\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?(?:\s*[–\-]\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?/i
-    );
-    return std ? std[0] : '';
+    // noon / midnight
+    const special = s.match(/\b(noon|midnight)\b/i);
+    return special ? special[0] : '';
   }
 
-  function extractLocation(sentence) {
-    // Split on " at " or " in ", iterate from end to find first capital-starting non-time segment
-    const parts = sentence.split(/\s+(?:at|in)\s+/i);
-    for (let i = parts.length - 1; i >= 1; i--) {
-      const part = parts[i].trim();
-      if (/^\d/.test(part)) continue;                          // skip times
-      if (/^https?:|\.com\b|\.org\b|\.net\b/.test(part)) continue; // skip URLs
-      if (!/^[A-Z]/.test(part)) continue;                     // must start uppercase
+  function extractLocation(s) {
+    // Split on " at " ONLY — "in" is too ambiguous for city qualifiers
+    const atParts = s.split(/\s+at\s+/i);
+    for (let i = atParts.length - 1; i >= 1; i--) {
+      const part = atParts[i].trim();
+      if (/^\d/.test(part)) continue;                                    // time digit
+      if (/^https?:|\.com\b|\.org\b|\.net\b/i.test(part)) continue;     // URL
+      if (!/^[A-Z'"(]/.test(part)) continue;                             // must start uppercase
+
       let loc = part
-        .split(/\s+(?:with|for|located|officiated|officiating|prior|during|and\s+the\b)\b/i)[0]
-        .replace(/[.,;]?\s*$/, '')
-        .trim();
+        .split(new RegExp(
+          `\\s+(?:with|for|located|officiated|officiating|prior|during|until|where\\b` +
+          `|on\\s+(?:${WEEKDAY_PAT})` +
+          `|from\\s+\\d|and\\s+(?:burial|funeral|graveside|interment|the)\\b)`, 'i'
+        ))[0];
+
+      loc = loc.replace(/,\s*\d.*$/, '');                                        // strip "123 Street Rd, …"
+      loc = loc.replace(/(?:,?\s+|\s+in\s+)[A-Z][a-z][\w ]*,\s*[A-Z]{2}(?:\s+\d{5})?\s*$/i, ''); // strip "City, ST zip"
+      loc = loc.replace(/[.,;]\s*$/, '').trim();
+
       if (loc.length > 2) return loc;
     }
+
+    // Fallback: "in [Named Venue]" for burials — non-greedy up to venue keyword
+    const inMatch = s.match(/\bin\s+([A-Z][^,.\n]*?(?:Cemetery|Mausoleum|Memorial\s+Park|Memory\s+Gardens|Gardens|Chapel|Park|Church|Cathedral))/i);
+    if (inMatch) return inMatch[1].replace(/[.,;]?\s*$/, '').trim();
+
     return '';
   }
 
   function parseServiceEvents(description) {
     if (!description) return [];
     const doc = new DOMParser().parseFromString(description, 'text/html');
-    const paragraphs = Array.from(doc.querySelectorAll('p, li'))
-      .map(el => el.textContent.trim())
-      .filter(t => t.length > 10);
+    const paras = Array.from(doc.querySelectorAll('p, li'))
+      .map(el => el.textContent.trim()).filter(t => t.length > 10);
 
     const events = [];
-    for (const para of paragraphs) {
+    for (const para of paras) {
       for (const sentence of splitSentences(para)) {
         let label = null;
         for (const { re, label: l } of EVENT_TYPES) {
           if (re.test(sentence)) { label = l; break; }
         }
         if (!label) continue;
-        events.push({
-          type:     label,
-          date:     extractDate(sentence),
-          time:     extractTime(sentence),
-          location: extractLocation(sentence),
-        });
+
+        const date     = extractDate(sentence);
+        const time     = extractTime(sentence);
+        const location = extractLocation(sentence);
+
+        if (!date && !time && !location) continue;  // nothing useful to show
+
+        events.push({ type: label, date, time, location });
       }
     }
 
-    // Deduplicate: same type + date + time
+    // Deduplicate on type + date + time
     const seen = new Set();
     return events.filter(e => {
       const key = `${e.type}|${e.date}|${e.time}`;
@@ -488,17 +503,22 @@
         </details>`
       : '';
 
-    return `<a class="obit-card${highlight && hasRecent ? ' recent' : ''}" href="${escHtml(url)}" target="_blank" rel="noopener">
-      <div class="obit-header">
-        ${photoHtml}
-        <div class="obit-info">
-          <div class="obit-name">${escHtml(obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`.trim())}</div>
-          <div class="obit-meta">${metaParts.join(' · ')}</div>
+    const name = escHtml(obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`.trim());
+
+    // Card is a <div>; <a> covers only the top clickable area; <details> is a sibling (valid HTML)
+    return `<div class="obit-card${highlight && hasRecent ? ' recent' : ''}">
+      <a class="obit-top-link" href="${escHtml(url)}" target="_blank" rel="noopener">
+        <div class="obit-header">
+          ${photoHtml}
+          <div class="obit-info">
+            <div class="obit-name">${name}</div>
+            <div class="obit-meta">${metaParts.join(' · ')}</div>
+          </div>
         </div>
-      </div>
-      ${svcHtml}
+        ${svcHtml}
+      </a>
       ${fullSection}
-    </a>`;
+    </div>`;
   }
 
   function renderPanel(bodyEl, badgeEl, obituaries, baseUrl) {
@@ -562,12 +582,6 @@
       if (e.target.closest('.panel-title-link')) return;
       header.closest('.panel').classList.toggle('expanded');
     });
-  });
-
-  // Prevent <details> toggle from navigating the card link
-  document.addEventListener('click', e => {
-    const details = e.target.closest('.obit-full');
-    if (details) e.preventDefault();
   });
 
   loadPanel('/api/oakley-cook', document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/');
