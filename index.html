@@ -53,6 +53,7 @@
         --red-border: rgba(220,38,38,0.22);
         --blue: #2563EB;
         --teal: #0D9488;
+        --red: #DC2626;
       }
     }
 
@@ -65,17 +66,48 @@
     }
 
     header {
-      max-width: 960px; margin: 0 auto 24px;
+      max-width: 1160px; margin: 0 auto 24px;
       display: flex; align-items: baseline; gap: 12px;
     }
     header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
     #last-updated { font-size: 0.8rem; color: var(--text-dim); }
 
-    .grid {
-      max-width: 960px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    /* ── Page layout ─────────────────────────────────────────────────────── */
+
+    /* Mobile: calendar top, then panels stacked */
+    .page-grid {
+      max-width: 1160px; margin: 0 auto;
+      display: grid; gap: 20px;
+      grid-template-columns: 1fr;
+      grid-template-areas: "cal" "oc" "ak";
     }
-    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+    /* Tablet: calendar spans top, panels side-by-side */
+    @media (min-width: 641px) {
+      .page-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: "cal cal" "oc ak";
+      }
+    }
+
+    /* Desktop: panels + sticky calendar sidebar */
+    @media (min-width: 900px) {
+      .page-grid {
+        grid-template-columns: 1fr 1fr 240px;
+        grid-template-areas: "oc ak cal";
+      }
+      .cal-sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+      }
+    }
+
+    .oc-panel  { grid-area: oc; }
+    .ak-panel  { grid-area: ak; }
+    .cal-sidebar { grid-area: cal; }
+
+    /* ── Panel card ──────────────────────────────────────────────────────── */
 
     .panel {
       background: var(--card-bg);
@@ -85,39 +117,28 @@
       overflow: hidden;
     }
 
-    /* Panel header */
     .panel-header {
       padding: 14px 18px 12px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 10px;
     }
+
     .fh-logo {
       width: 36px; height: 36px; border-radius: 6px;
       object-fit: contain; flex-shrink: 0;
       background: white; padding: 3px;
     }
+
     .panel-title-group { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
     .panel-title-link {
       font-size: 1rem; font-weight: 600; color: var(--text);
       text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .panel-title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
     .day-badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; color: var(--text-dim); }
 
-    /* Mobile panel collapse */
-    .panel-chevron {
-      display: none;
-      font-size: 1rem; color: var(--text-dim);
-      margin-left: 4px; transition: transform 0.2s;
-      flex-shrink: 0;
-    }
-    @media (max-width: 640px) {
-      .panel-header { cursor: pointer; user-select: none; }
-      .panel-chevron { display: block; }
-      .panel-body { display: none; }
-      .panel.expanded .panel-body { display: block; }
-      .panel.expanded .panel-chevron { transform: rotate(180deg); }
-    }
     .summary-badge {
       font-size: 0.75rem; font-weight: 600;
       padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
@@ -126,7 +147,21 @@
     .summary-badge.alert  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
     .summary-badge.loading { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
-    /* Section labels */
+    /* Mobile panel collapse */
+    .panel-chevron {
+      display: none; font-size: 1rem; color: var(--text-dim);
+      margin-left: 4px; flex-shrink: 0; transition: transform 0.2s;
+    }
+    @media (max-width: 640px) {
+      .panel-header { cursor: pointer; user-select: none; }
+      .panel-chevron { display: block; }
+      .panel-body { display: none; }
+      .panel.expanded .panel-body { display: block; }
+      .panel.expanded .panel-chevron { transform: rotate(180deg); }
+    }
+
+    /* ── Section labels ──────────────────────────────────────────────────── */
+
     .week-section-label {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
       text-transform: uppercase; color: var(--orange); padding: 10px 14px 3px;
@@ -136,10 +171,10 @@
       text-transform: uppercase; color: var(--text-dim); padding: 10px 14px 3px;
     }
 
-    /* Card list */
+    /* ── Obit card ───────────────────────────────────────────────────────── */
+
     .obit-list { padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
 
-    /* Obit card */
     .obit-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -148,33 +183,33 @@
       transition: border-color 0.15s;
     }
     .obit-card:hover { border-color: var(--border-hover); }
-    .obit-card .obit-top-link { padding: 11px 12px 0; }
     .obit-card.recent { background: var(--orange-bg); border-color: var(--orange-border); }
-    .obit-card .obit-full { padding: 0 12px 10px; }
 
-    /* Card top: photo + name */
     .obit-top-link {
       display: block; text-decoration: none; color: inherit;
-      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      padding: 11px 12px 0;
     }
     .obit-top-link:hover .obit-name { text-decoration: underline; text-underline-offset: 2px; }
+
     .obit-header { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+
     .obit-photo {
       width: 44px; height: 56px; object-fit: cover;
       border-radius: 4px; flex-shrink: 0; background: var(--surface);
     }
+
     .obit-info { flex: 1; min-width: 0; padding-top: 1px; }
     .obit-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
     .obit-meta { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; }
 
-    /* Service table */
+    /* ── Service table ───────────────────────────────────────────────────── */
+
     .svc-wrap { overflow-x: auto; margin-top: 2px; padding-bottom: 10px; }
 
     .svc-table {
       width: 100%; border-collapse: collapse;
       font-size: 0.74rem; min-width: 260px;
     }
-
     .svc-table thead th {
       text-align: left; font-size: 0.62rem; font-weight: 700;
       letter-spacing: 0.07em; text-transform: uppercase;
@@ -182,34 +217,24 @@
       border-bottom: 1px solid var(--border);
     }
     .svc-table thead th:last-child { padding-right: 0; }
-
     .svc-table tbody tr { border-top: 1px solid var(--border); }
     .svc-table tbody tr:first-child { border-top: none; }
-
-    .svc-table td {
-      padding: 5px 6px 5px 0;
-      vertical-align: top;
-      line-height: 1.4;
-    }
+    .svc-table td { padding: 5px 6px 5px 0; vertical-align: top; line-height: 1.4; }
     .svc-table td:last-child { padding-right: 0; }
-
     .svc-type { font-weight: 600; color: var(--text); white-space: nowrap; }
     .svc-date { color: var(--blue); }
     .svc-time { color: var(--teal); white-space: nowrap; }
     .svc-loc  { color: var(--orange); }
 
-    .no-services { font-size: 0.75rem; color: var(--text-dim); font-style: italic; margin-top: 4px; }
+    /* ── Full obituary collapsible ───────────────────────────────────────── */
 
-    /* Full obituary collapsible */
     .obit-full {
-      margin-top: 10px;
-      border-top: 1px solid var(--border);
-      padding-top: 8px;
+      margin-top: 0; border-top: 1px solid var(--border); padding: 0 12px 10px;
     }
     .obit-full summary {
-      font-size: 0.71rem; font-weight: 700; letter-spacing: 0.04em;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
       text-transform: uppercase; color: var(--text-dim);
-      cursor: pointer; user-select: none;
+      cursor: pointer; user-select: none; padding: 8px 0 0;
       list-style: none; display: flex; align-items: center; gap: 4px;
     }
     .obit-full summary::-webkit-details-marker { display: none; }
@@ -217,13 +242,80 @@
     .obit-full[open] summary::after { content: '▴'; }
     .obit-full-text {
       margin-top: 8px;
-      font-size: 0.75rem; color: var(--text-muted); line-height: 1.65;
-      white-space: pre-wrap;
+      font-size: 0.75rem; color: var(--text-muted);
+      line-height: 1.65; white-space: pre-wrap;
     }
 
+    .no-services { font-size: 0.75rem; color: var(--text-dim); font-style: italic; padding: 0 12px 10px; }
     .empty-state  { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
     .error-state  { padding: 20px 18px; font-size: 0.82rem; color: var(--red); }
     .loading-state { padding: 32px 18px; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+
+    /* ── Calendar widget ─────────────────────────────────────────────────── */
+
+    .cal-widget {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .cal-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .cal-month-label { font-size: 0.88rem; font-weight: 600; }
+
+    .cal-nav {
+      background: none; border: none;
+      color: var(--text-muted); font-size: 1.1rem;
+      cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    .cal-nav:hover { color: var(--text); }
+
+    .cal-dow-row {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      padding: 8px 10px 2px; gap: 2px;
+    }
+    .cal-dow-row span {
+      text-align: center; font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim);
+    }
+    .cal-dow-row .wd-end { color: var(--red); opacity: 0.75; }
+
+    .cal-days {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      padding: 2px 10px 12px; gap: 1px;
+    }
+
+    .cal-day {
+      position: relative; text-align: center;
+      font-size: 0.78rem; padding: 5px 2px 3px;
+      border-radius: 5px; color: var(--text); line-height: 1;
+      cursor: default;
+    }
+    .cal-day-other  { color: var(--text-dim); }
+    .cal-day-weekend { color: var(--red); }
+    .cal-day-other.cal-day-weekend { color: var(--red); opacity: 0.4; }
+
+    .cal-day-today {
+      background: rgba(255,255,255,0.12);
+      font-weight: 700;
+    }
+    @media (prefers-color-scheme: light) {
+      .cal-day-today { background: rgba(0,0,0,0.08); }
+    }
+
+    /* Orange dot below date for days with a service */
+    .cal-day-service::after {
+      content: '';
+      display: block; width: 4px; height: 4px;
+      border-radius: 50%; background: var(--orange);
+      margin: 2px auto 0;
+    }
   </style>
 </head>
 <body>
@@ -233,8 +325,10 @@
   <span id="last-updated"></span>
 </header>
 
-<div class="grid">
-  <div class="panel">
+<div class="page-grid">
+
+  <!-- ── Oakley-Cook panel ──────────────────────────────────────────────── -->
+  <div class="panel oc-panel">
     <div class="panel-header">
       <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/ac386460-9069-4d71-8a48-0a6ab1f5f511/562b11ff-74cb-4d66-b951-c27101f19437_thumbnail.webp" alt="Oakley-Cook logo">
       <div class="panel-title-group">
@@ -249,7 +343,8 @@
     </div>
   </div>
 
-  <div class="panel">
+  <!-- ── Akard panel ────────────────────────────────────────────────────── -->
+  <div class="panel ak-panel">
     <div class="panel-header">
       <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/67518621-83f9-4a0d-aa33-7b11c4c73ce9/068b181f-349e-43a2-8451-f771d5b2d275_thumbnail.webp" alt="Akard logo">
       <div class="panel-title-group">
@@ -263,14 +358,31 @@
       <div id="ak-body"><div class="loading-state">Loading...</div></div>
     </div>
   </div>
-</div>
+
+  <!-- ── Calendar sidebar ───────────────────────────────────────────────── -->
+  <div class="cal-sidebar">
+    <div class="cal-widget">
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev" aria-label="Previous month">&#8249;</button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="cal-nav" id="cal-next" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="cal-dow-row">
+        <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span>
+        <span class="wd-end">Sa</span><span class="wd-end">Su</span>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+  </div>
+
+</div><!-- .page-grid -->
 
 <script>
   const LOOKBACK_DAYS = 30;
   const RECENT_DAYS  = 7;
   const IMG_BASE     = 'https://d1q40j6jx1d8h6.cloudfront.net/';
 
-  // ── Date helpers ───────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   function parseDate(str) {
     if (!str) return null;
@@ -300,6 +412,97 @@
     const d = daysBetween(date, now);
     return d >= 0 && d <= LOOKBACK_DAYS;
   }
+  function isoDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Calendar ──────────────────────────────────────────────────────────────
+
+  const calState = {
+    year:  new Date().getFullYear(),
+    month: new Date().getMonth(),   // 0-indexed
+    serviceDates: new Set(),        // "YYYY-MM-DD" strings
+  };
+
+  function addServiceDates(obituaries) {
+    for (const o of obituaries) {
+      if (o.LastServiceDate) {
+        const d = parseDate(o.LastServiceDate);
+        if (d) calState.serviceDates.add(isoDate(d));
+      }
+    }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const { year, month, serviceDates } = calState;
+    const today = new Date();
+
+    document.getElementById('cal-month-label').textContent =
+      new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const firstDow  = new Date(year, month, 1).getDay();          // Sun=0
+    const startSlot = firstDow === 0 ? 6 : firstDow - 1;         // Mon=0 offset
+    const lastDate  = new Date(year, month + 1, 0).getDate();
+    const prevLast  = new Date(year, month, 0).getDate();
+
+    const cells = [];
+
+    // Prev-month tail
+    for (let i = startSlot - 1; i >= 0; i--) {
+      const m = month === 0 ? 11 : month - 1;
+      const y = month === 0 ? year - 1 : year;
+      cells.push({ day: prevLast - i, month: m, year: y, current: false });
+    }
+    // Current month
+    for (let d = 1; d <= lastDate; d++) {
+      cells.push({ day: d, month, year, current: true });
+    }
+    // Next-month fill to complete last row
+    let nd = 1;
+    while (cells.length % 7 !== 0) {
+      const m = month === 11 ? 0 : month + 1;
+      const y = month === 11 ? year + 1 : year;
+      cells.push({ day: nd++, month: m, year: y, current: false });
+    }
+
+    const html = cells.map(({ day, month: m, year: y, current }) => {
+      const date   = new Date(y, m, day);
+      const dow    = date.getDay();                     // 0=Sun, 6=Sat
+      const wkend  = dow === 0 || dow === 6;
+      const isToday= y === today.getFullYear() && m === today.getMonth() && day === today.getDate();
+      const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const hasSvc = serviceDates.has(key);
+
+      let cls = 'cal-day';
+      if (!current) cls += ' cal-day-other';
+      if (wkend)    cls += ' cal-day-weekend';
+      if (isToday)  cls += ' cal-day-today';
+      if (hasSvc)   cls += ' cal-day-service';
+
+      return `<div class="${cls}" title="${hasSvc ? 'Service day' : ''}">${day}</div>`;
+    }).join('');
+
+    document.getElementById('cal-days').innerHTML = html;
+  }
+
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    if (calState.month === 0) { calState.month = 11; calState.year--; }
+    else calState.month--;
+    renderCalendar();
+  });
+  document.getElementById('cal-next').addEventListener('click', () => {
+    if (calState.month === 11) { calState.month = 0; calState.year++; }
+    else calState.month++;
+    renderCalendar();
+  });
+
+  renderCalendar(); // render immediately before API data arrives
 
   // ── Service event parser ──────────────────────────────────────────────────
 
@@ -326,62 +529,50 @@
   }
 
   function extractDate(s) {
-    // US: [Weekday,] Month D[th][, YYYY]
     const us = s.match(new RegExp(`(?:(?:${WEEKDAY_PAT}),?\\s+)?(?:${MONTH_PAT})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{4})?`, 'i'));
     if (us) return us[0];
-    // EU: D Month YYYY  e.g. "19 May 2026"
     const eu = s.match(new RegExp(`\\b\\d{1,2}\\s+(?:${MONTH_PAT})\\s+\\d{4}`, 'i'));
     if (eu) return eu[0];
-    // Bare weekday before comma, "at", "prior", or end
     const wd = s.match(new RegExp(`\\b(${WEEKDAY_PAT})\\b(?=\\s*(?:,|\\bat\\b|\\bprior\\b|$))`, 'i'));
     return wd ? wd[0] : '';
   }
 
   function extractTime(s) {
-    // Standard first — "7:00 pm", "5:00 – 7:00 pm", also 4-digit "1130 am"
     const std = s.match(/\b\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?(?:\s*[–\-]\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?)?/i);
     if (std) return std[0];
-    // "from X to/- Y pm" where first time has no am/pm
     const range = s.match(/from\s+\d{1,4}(?::\d{2})?\s*(?:to|[–\-])\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?/i);
     if (range) return range[0];
-    // noon / midnight
     const special = s.match(/\b(noon|midnight)\b/i);
     return special ? special[0] : '';
   }
 
   function extractLocation(s) {
-    // Split on " at " ONLY — "in" is too ambiguous for city qualifiers
     const atParts = s.split(/\s+at\s+/i);
     for (let i = atParts.length - 1; i >= 1; i--) {
       const part = atParts[i].trim();
-      if (/^\d/.test(part)) continue;                                    // time digit
-      if (/^https?:|\.com\b|\.org\b|\.net\b/i.test(part)) continue;     // URL
-      if (!/^[A-Z'"(]/.test(part)) continue;                             // must start uppercase
+      if (/^\d/.test(part)) continue;
+      if (/^https?:|\.com\b|\.org\b|\.net\b/i.test(part)) continue;
+      if (!/^[A-Z'"(]/.test(part)) continue;
 
-      let loc = part
-        .split(new RegExp(
-          `\\s+(?:with|for|located|officiated|officiating|prior|during|until|where\\b` +
-          `|on\\s+(?:${WEEKDAY_PAT})` +
-          `|from\\s+\\d|and\\s+(?:burial|funeral|graveside|interment|the)\\b)`, 'i'
-        ))[0];
+      let loc = part.split(new RegExp(
+        `\\s+(?:with|for|located|officiated|officiating|prior|during|until|where\\b` +
+        `|on\\s+(?:${WEEKDAY_PAT})|from\\s+\\d|and\\s+(?:burial|funeral|graveside|interment|the)\\b)`, 'i'
+      ))[0];
 
-      loc = loc.replace(/,\s*\d.*$/, '');                                        // strip "123 Street Rd, …"
-      loc = loc.replace(/(?:,?\s+|\s+in\s+)[A-Z][a-z][\w ]*,\s*[A-Z]{2}(?:\s+\d{5})?\s*$/i, ''); // strip "City, ST zip"
+      loc = loc.replace(/,\s*\d.*$/, '');
+      loc = loc.replace(/(?:,?\s+|\s+in\s+)[A-Z][a-z][\w ]*,\s*[A-Z]{2}(?:\s+\d{5})?\s*$/i, '');
       loc = loc.replace(/[.,;]\s*$/, '').trim();
-
       if (loc.length > 2) return loc;
     }
 
-    // Fallback: "in [Named Venue]" for burials — non-greedy up to venue keyword
     const inMatch = s.match(/\bin\s+([A-Z][^,.\n]*?(?:Cemetery|Mausoleum|Memorial\s+Park|Memory\s+Gardens|Gardens|Chapel|Park|Church|Cathedral))/i);
     if (inMatch) return inMatch[1].replace(/[.,;]?\s*$/, '').trim();
-
     return '';
   }
 
   function parseServiceEvents(description) {
     if (!description) return [];
-    const doc = new DOMParser().parseFromString(description, 'text/html');
+    const doc  = new DOMParser().parseFromString(description, 'text/html');
     const paras = Array.from(doc.querySelectorAll('p, li'))
       .map(el => el.textContent.trim()).filter(t => t.length > 10);
 
@@ -393,34 +584,23 @@
           if (re.test(sentence)) { label = l; break; }
         }
         if (!label) continue;
-
         const date     = extractDate(sentence);
         const time     = extractTime(sentence);
         const location = extractLocation(sentence);
-
-        if (!date && !time && !location) continue;  // nothing useful to show
-
+        if (!date && !time && !location) continue;
         events.push({ type: label, date, time, location });
       }
     }
 
-    // Deduplicate on type + date + time
     const seen = new Set();
     return events.filter(e => {
       const key = `${e.type}|${e.date}|${e.time}`;
       if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
+      seen.add(key); return true;
     });
   }
 
-  // ── Card / panel rendering ─────────────────────────────────────────────────
-
-  function escHtml(str) {
-    return String(str || '')
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  // ── Card / panel rendering ────────────────────────────────────────────────
 
   function obituaryUrl(obit, baseUrl) {
     const name = (obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`)
@@ -437,9 +617,7 @@
     if (!html) return '';
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return Array.from(doc.querySelectorAll('p'))
-      .map(p => p.textContent.trim())
-      .filter(t => t.length > 0)
-      .join('\n\n');
+      .map(p => p.textContent.trim()).filter(t => t.length > 0).join('\n\n');
   }
 
   function renderCard(obit, now, highlight, baseUrl) {
@@ -462,40 +640,31 @@
 
     let svcHtml = '';
     if (events.length > 0) {
-      let rows = '';
-      for (const e of events) {
-        rows += `<tr>
-          <td class="svc-type">${escHtml(e.type)}</td>
-          <td class="svc-date">${escHtml(e.date)}</td>
-          <td class="svc-time">${escHtml(e.time)}</td>
-          <td class="svc-loc">${escHtml(e.location)}</td>
-        </tr>`;
-      }
-      svcHtml = `<div class="svc-wrap">
-        <table class="svc-table">
-          <thead><tr>
-            <th>Event</th><th>Date</th><th>Time</th><th>Location</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+      const rows = events.map(e => `<tr>
+        <td class="svc-type">${escHtml(e.type)}</td>
+        <td class="svc-date">${escHtml(e.date)}</td>
+        <td class="svc-time">${escHtml(e.time)}</td>
+        <td class="svc-loc">${escHtml(e.location)}</td>
+      </tr>`).join('');
+      svcHtml = `<div class="svc-wrap"><table class="svc-table">
+        <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`;
     } else if (lastSvc) {
-      svcHtml = `<div class="svc-wrap">
-        <table class="svc-table">
-          <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
-          <tbody><tr>
-            <td class="svc-type">Service</td>
-            <td class="svc-date">${escHtml(fmt(lastSvc))}</td>
-            <td class="svc-time"></td>
-            <td class="svc-loc">${escHtml(obit.ServingLocationName || '')}</td>
-          </tr></tbody>
-        </table>
-      </div>`;
+      svcHtml = `<div class="svc-wrap"><table class="svc-table">
+        <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+        <tbody><tr>
+          <td class="svc-type">Service</td>
+          <td class="svc-date">${escHtml(fmt(lastSvc))}</td>
+          <td class="svc-time"></td>
+          <td class="svc-loc">${escHtml(obit.ServingLocationName || '')}</td>
+        </tr></tbody>
+      </table></div>`;
     } else {
-      svcHtml = '<div class="no-services">No service details found</div>';
+      svcHtml = '<div class="no-services">No service details posted</div>';
     }
 
-    const fullText = descriptionToText(obit.Description);
+    const fullText    = descriptionToText(obit.Description);
     const fullSection = fullText
       ? `<details class="obit-full">
           <summary>Full Obituary</summary>
@@ -505,7 +674,6 @@
 
     const name = escHtml(obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`.trim());
 
-    // Card is a <div>; <a> covers only the top clickable area; <details> is a sibling (valid HTML)
     return `<div class="obit-card${highlight && hasRecent ? ' recent' : ''}">
       <a class="obit-top-link" href="${escHtml(url)}" target="_blank" rel="noopener">
         <div class="obit-header">
@@ -564,6 +732,7 @@
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
       renderPanel(bodyEl, badgeEl, list, baseUrl);
+      addServiceDates(list);   // mark service days on calendar
     } catch (err) {
       bodyEl.innerHTML = `<div class="error-state">Error: ${escHtml(err.message)}</div>`;
       badgeEl.textContent = 'Error';
@@ -571,14 +740,15 @@
     }
   }
 
+  // ── Init ──────────────────────────────────────────────────────────────────
+
   document.getElementById('last-updated').textContent =
     'Updated ' + new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-  // Mobile panel collapse: tap header to toggle
+  // Mobile panel collapse
   document.querySelectorAll('.panel-header').forEach(header => {
     header.addEventListener('click', e => {
       if (window.innerWidth > 640) return;
-      // Don't collapse when tapping the title link
       if (e.target.closest('.panel-title-link')) return;
       header.closest('.panel').classList.toggle('expanded');
     });
