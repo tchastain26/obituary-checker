@@ -29,6 +29,12 @@
       --red: #F87171;
       --red-bg: rgba(248,113,113,0.12);
       --red-border: rgba(248,113,113,0.30);
+      --akard: #34D399;
+      --akard-bg: rgba(52,211,153,0.14);
+      --akard-border: rgba(52,211,153,0.34);
+      --oc: #F87171;
+      --oc-bg: rgba(248,113,113,0.14);
+      --oc-border: rgba(248,113,113,0.34);
       --blue: #60A5FA;
       --teal: #2DD4BF;
     }
@@ -54,6 +60,12 @@
         --blue: #2563EB;
         --teal: #0D9488;
         --red: #DC2626;
+        --akard: #059669;
+        --akard-bg: rgba(5,150,105,0.10);
+        --akard-border: rgba(5,150,105,0.26);
+        --oc: #DC2626;
+        --oc-bg: rgba(220,38,38,0.10);
+        --oc-border: rgba(220,38,38,0.26);
       }
     }
 
@@ -112,10 +124,13 @@
     .panel {
       background: var(--card-bg);
       border: 1px solid var(--border);
+      border-top-width: 3px;
       border-radius: var(--radius);
       box-shadow: var(--card-shadow);
       overflow: hidden;
     }
+    .panel-oc { border-top-color: var(--oc); }
+    .panel-ak { border-top-color: var(--akard); }
 
     .panel-header {
       padding: 14px 18px 12px;
@@ -129,22 +144,24 @@
       background: white; padding: 3px;
     }
 
-    .panel-title-group { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .panel-title-group { flex: 1; min-width: 0; }
 
     .panel-title-link {
       font-size: 1rem; font-weight: 600; color: var(--text);
       text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .panel-oc .panel-title-link { color: var(--oc); }
+    .panel-ak .panel-title-link { color: var(--akard); }
     .panel-title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-
-    .day-badge { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; color: var(--text-dim); }
 
     .summary-badge {
       font-size: 0.75rem; font-weight: 600;
       padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
     }
-    .summary-badge.clean  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-    .summary-badge.alert  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+    .summary-badge.ak.clean,
+    .summary-badge.ak.alert  { background: var(--akard-bg); color: var(--akard); border: 1px solid var(--akard-border); }
+    .summary-badge.oc.clean,
+    .summary-badge.oc.alert  { background: var(--oc-bg); color: var(--oc); border: 1px solid var(--oc-border); }
     .summary-badge.loading { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
     /* Mobile panel collapse */
@@ -164,8 +181,10 @@
 
     .week-section-label {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: var(--orange); padding: 10px 14px 3px;
+      text-transform: uppercase; padding: 10px 14px 3px;
     }
+    .panel-oc .week-section-label { color: var(--oc); }
+    .panel-ak .week-section-label { color: var(--akard); }
     .older-section-label {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
       text-transform: uppercase; color: var(--text-dim); padding: 10px 14px 3px;
@@ -183,7 +202,8 @@
       transition: border-color 0.15s;
     }
     .obit-card:hover { border-color: var(--border-hover); }
-    .obit-card.recent { background: var(--orange-bg); border-color: var(--orange-border); }
+    .panel-oc .obit-card.recent { background: var(--oc-bg); border-color: var(--oc-border); }
+    .panel-ak .obit-card.recent { background: var(--akard-bg); border-color: var(--akard-border); }
 
     .obit-top-link {
       display: block; text-decoration: none; color: inherit;
@@ -202,15 +222,7 @@
     .obit-name { font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
     .obit-meta { font-size: 0.72rem; color: var(--text-dim); line-height: 1.5; }
 
-    /* ── Highlighted service sentences ──────────────────────────────────── */
-
-    .svc-lines { padding: 0 0 10px; }
-    .svc-line  { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; padding: 1px 0; }
-    .hl-date   { color: var(--blue);   font-weight: 600; }
-    .hl-time   { color: var(--teal);   font-weight: 600; }
-    .hl-loc    { color: var(--orange); font-weight: 500; }
-
-    /* ── Service details table (lazy-loaded) ─────────────────────────────── */
+    /* ── Service details table ────────────────────────────────────────────── */
 
     .svc-table {
       width: 100%; border-collapse: collapse; font-size: 0.74rem;
@@ -224,16 +236,25 @@
     .svc-table tbody tr { border-top: 1px solid var(--border); }
     .svc-table tbody tr:first-child { border-top: none; }
     .svc-table td { padding: 5px 8px 5px 0; vertical-align: top; line-height: 1.4; }
-    .svc-type  { font-weight: 600; color: var(--text); white-space: nowrap; }
-    .svc-date  { color: var(--blue);   white-space: nowrap; }
-    .svc-time  { color: var(--teal);   white-space: nowrap; }
-    .svc-loc   { color: var(--orange); }
-    .svc-addr  { font-size: 0.7rem; color: var(--text-dim); margin-top: 1px; }
+    .svc-event { width: 26%; min-width: 92px; }
+    .svc-date-col { width: 28%; min-width: 110px; }
+    .svc-location-col { width: 46%; }
+    .svc-type  { font-weight: 600; color: var(--text); }
+    .svc-event-time { color: var(--text-muted); margin-top: 1px; }
+    .svc-date  { color: var(--text); }
+    .svc-loc   { color: var(--text); }
+    .svc-loc-ak { color: var(--akard); font-weight: 600; }
+    .svc-loc-oc { color: var(--oc); font-weight: 600; }
 
     /* ── Collapsible sections (shared) ───────────────────────────────────── */
 
     .obit-detail {
       border-top: 1px solid var(--border); padding: 0 12px 10px;
+    }
+    .obit-detail-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--text-dim);
+      padding: 8px 0 0;
     }
     .obit-detail summary {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
@@ -300,10 +321,12 @@
 
     .cal-day {
       position: relative; text-align: center;
-      font-size: 0.78rem; padding: 5px 2px 3px;
+      font-size: 0.78rem; padding: 5px 2px 4px;
       border-radius: 5px; color: var(--text); line-height: 1;
       cursor: default;
+      min-height: 30px;
     }
+    .cal-day-num { display: block; }
     .cal-day-other  { color: var(--text-dim); }
     .cal-day-weekend { color: var(--red); }
     .cal-day-other.cal-day-weekend { color: var(--red); opacity: 0.4; }
@@ -316,13 +339,16 @@
       .cal-day-today { background: rgba(0,0,0,0.08); }
     }
 
-    /* Orange dot below date for days with a service */
-    .cal-day-service::after {
-      content: '';
-      display: block; width: 4px; height: 4px;
-      border-radius: 50%; background: var(--orange);
-      margin: 2px auto 0;
+    .cal-dots {
+      display: flex; justify-content: center; gap: 3px;
+      margin-top: 3px; min-height: 4px;
     }
+    .cal-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      display: inline-block;
+    }
+    .cal-dot.ak { background: var(--akard); }
+    .cal-dot.oc { background: var(--oc); }
   </style>
 </head>
 <body>
@@ -335,12 +361,11 @@
 <div class="page-grid">
 
   <!-- ── Oakley-Cook panel ──────────────────────────────────────────────── -->
-  <div class="panel oc-panel">
+  <div class="panel oc-panel panel-oc">
     <div class="panel-header">
       <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/ac386460-9069-4d71-8a48-0a6ab1f5f511/562b11ff-74cb-4d66-b951-c27101f19437_thumbnail.webp" alt="Oakley-Cook logo">
       <div class="panel-title-group">
         <a class="panel-title-link" href="https://www.oakley-cook.com/obituaries/obituary-listings?page=1" target="_blank" rel="noopener">Oakley-Cook</a>
-        <span class="day-badge">WED</span>
       </div>
       <span class="summary-badge loading" id="oc-badge">Loading...</span>
       <span class="panel-chevron">▾</span>
@@ -351,12 +376,11 @@
   </div>
 
   <!-- ── Akard panel ────────────────────────────────────────────────────── -->
-  <div class="panel ak-panel">
+  <div class="panel ak-panel panel-ak">
     <div class="panel-header">
       <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/67518621-83f9-4a0d-aa33-7b11c4c73ce9/068b181f-349e-43a2-8451-f771d5b2d275_thumbnail.webp" alt="Akard logo">
       <div class="panel-title-group">
         <a class="panel-title-link" href="https://www.akardfuneralhome.com/obituaries/obituary-listings?page=1" target="_blank" rel="noopener">Akard</a>
-        <span class="day-badge">THU</span>
       </div>
       <span class="summary-badge loading" id="ak-badge">Loading...</span>
       <span class="panel-chevron">▾</span>
@@ -388,6 +412,7 @@
   const LOOKBACK_DAYS = 30;
   const RECENT_DAYS  = 7;
   const IMG_BASE     = 'https://d1q40j6jx1d8h6.cloudfront.net/';
+  const obituaryInfoCache = new Map();
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -433,15 +458,47 @@
   const calState = {
     year:  new Date().getFullYear(),
     month: new Date().getMonth(),   // 0-indexed
-    serviceDates: new Set(),        // "YYYY-MM-DD" strings
+    serviceDates: {
+      akard: new Set(),
+      'oakley-cook': new Set(),
+    },
   };
 
-  function addServiceDates(obituaries) {
-    for (const o of obituaries) {
-      if (o.LastServiceDate) {
-        const d = parseDate(o.LastServiceDate);
-        if (d) calState.serviceDates.add(isoDate(d));
-      }
+  function addServiceDate(src, date) {
+    if (!date || !calState.serviceDates[src]) return;
+    calState.serviceDates[src].add(isoDate(date));
+  }
+
+  function normalizeLocationName(name) {
+    return String(name || '').toLowerCase().replace(/[^a-z]/g, '');
+  }
+
+  function isSourceLocation(src, name) {
+    const normalized = normalizeLocationName(name);
+    if (!normalized) return false;
+    if (src === 'akard') return normalized.includes('akard');
+    if (src === 'oakley-cook') return normalized.includes('oakleycook');
+    return false;
+  }
+
+  function locationToneClass(src, name) {
+    if (!isSourceLocation(src, name)) return '';
+    return src === 'akard' ? 'svc-loc-ak' : 'svc-loc-oc';
+  }
+
+  function isCleaningRelevantEvent(name) {
+    return /service|visitation/i.test(String(name || ''));
+  }
+
+  function sourceTone(src) {
+    return src === 'akard' ? 'ak' : 'oc';
+  }
+
+  function addServiceDates(src, services) {
+    for (const svc of services || []) {
+      if (!isSourceLocation(src, svc?.ServiceLocation?.Name)) continue;
+      const d = parseDate(svc.StartTime);
+      if (d) addServiceDate(src, d);
     }
     renderCalendar();
   }
@@ -484,15 +541,22 @@
       const wkend  = dow === 0 || dow === 6;
       const isToday= y === today.getFullYear() && m === today.getMonth() && day === today.getDate();
       const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const hasSvc = serviceDates.has(key);
+      const hasAk  = serviceDates.akard.has(key);
+      const hasOc  = serviceDates['oakley-cook'].has(key);
 
       let cls = 'cal-day';
       if (!current) cls += ' cal-day-other';
       if (wkend)    cls += ' cal-day-weekend';
       if (isToday)  cls += ' cal-day-today';
-      if (hasSvc)   cls += ' cal-day-service';
+      const dotTitle = hasAk && hasOc ? 'Akard and Oakley-Cook service day'
+        : hasAk ? 'Akard service day'
+        : hasOc ? 'Oakley-Cook service day'
+        : '';
+      const dots = (hasAk || hasOc)
+        ? `<div class="cal-dots">${hasAk ? '<span class="cal-dot ak"></span>' : ''}${hasOc ? '<span class="cal-dot oc"></span>' : ''}</div>`
+        : '<div class="cal-dots"></div>';
 
-      return `<div class="${cls}" title="${hasSvc ? 'Service day' : ''}">${day}</div>`;
+      return `<div class="${cls}" title="${dotTitle}"><span class="cal-day-num">${day}</span>${dots}</div>`;
     }).join('');
 
     document.getElementById('cal-days').innerHTML = html;
@@ -511,52 +575,7 @@
 
   renderCalendar(); // render immediately before API data arrives
 
-  // ── Service text highlighting ─────────────────────────────────────────────
-
-  const SVC_KW = /visitation|viewing|wake|receive\s+friends|receiving|graveside|funeral|burial|interment|committal|memorial|resting|procession|reception|celebration\s+of\s+life|laid\s+to\s+rest/i;
-
-  const HL_PATTERNS = [
-    // Date: optional weekday + month + day + optional year
-    { re: /(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?/gi, cls: 'hl-date' },
-    // Time: "7:00 pm", "5:00 – 7:00 pm", "noon"
-    { re: /\b(?:noon|midnight|\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?(?:\s*[–\-]\s*\d{1,4}(?::\d{2})?\s*[ap]\.?\s*m\.?)?)/gi, cls: 'hl-time' },
-    // Location: "at Chapel/Funeral Home/Cemetery..."
-    { re: /\bat\s+[A-Z][^.,;\n]*/g, cls: 'hl-loc' },
-  ];
-
-  function highlightServiceText(text) {
-    const marks = [];
-    for (const { re, cls } of HL_PATTERNS) {
-      re.lastIndex = 0;
-      let m;
-      while ((m = re.exec(text)) !== null) {
-        marks.push({ start: m.index, end: m.index + m[0].length, cls });
-      }
-    }
-    marks.sort((a, b) => a.start - b.start);
-    const resolved = [];
-    let cursor = 0;
-    for (const mark of marks) {
-      if (mark.start >= cursor) { resolved.push(mark); cursor = mark.end; }
-    }
-    let html = '', pos = 0;
-    for (const { start, end, cls } of resolved) {
-      html += escHtml(text.slice(pos, start));
-      html += `<span class="${cls}">${escHtml(text.slice(start, end))}</span>`;
-      pos = end;
-    }
-    return html + escHtml(text.slice(pos));
-  }
-
-  function serviceLines(description) {
-    if (!description) return [];
-    const doc = new DOMParser().parseFromString(description, 'text/html');
-    return Array.from(doc.querySelectorAll('p, li'))
-      .map(el => el.textContent.trim())
-      .filter(t => t.length > 15 && SVC_KW.test(t));
-  }
-
-  // ── Service details (lazy-loaded from GetObituaryInfo API) ────────────────
+  // ── Service details (loaded from GetObituaryInfo API) ─────────────────────
 
   function fmtIsoTime(iso) {
     if (!iso) return '';
@@ -570,59 +589,80 @@
     return isNaN(d) ? '' : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
-  function renderServiceTable(services, cemetery) {
+  async function getObituaryInfo(obituaryId, src) {
+    const key = `${src}:${obituaryId}`;
+    if (!obituaryInfoCache.has(key)) {
+      obituaryInfoCache.set(key, (async () => {
+        const res = await fetch(`/api/obituary-info?obituaryId=${encodeURIComponent(obituaryId)}&src=${encodeURIComponent(src)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })());
+    }
+    return obituaryInfoCache.get(key);
+  }
+
+  function buildObituaryMeta(src, info) {
+    const services = Array.isArray(info?.services) ? info.services : [];
+    const sourceServices = services.filter(svc => isSourceLocation(src, svc?.ServiceLocation?.Name));
+    const priorityServices = sourceServices.filter(svc => isCleaningRelevantEvent(svc?.ServiceEventName));
+    return {
+      services,
+      cemetery: info?.cemetery ?? null,
+      sourceServices,
+      priorityServices,
+    };
+  }
+
+  function renderServiceTable(services, cemetery, src) {
     const rows = services.map(svc => {
       const name  = escHtml(svc.ServiceEventName || '');
       const date  = escHtml(fmtIsoDate(svc.StartTime));
       const start = fmtIsoTime(svc.StartTime);
       const end   = fmtIsoTime(svc.EndTime);
-      const time  = escHtml(start && end ? `${start} – ${end}` : start);
+      const time  = escHtml(start && end ? `${start} to ${end}` : start);
       const loc   = svc.ServiceLocation || {};
       const locName = escHtml(loc.Name || '');
-      const addr    = escHtml(loc.AddressDetails || '');
+      const locTone = locationToneClass(src, loc.Name);
       return `<tr>
-        <td class="svc-type">${name}</td>
-        <td class="svc-date">${date}</td>
-        <td class="svc-time">${time}</td>
-        <td class="svc-loc">${locName}${addr ? `<div class="svc-addr">${addr}</div>` : ''}</td>
+        <td class="svc-event">
+          <div class="svc-type">${name}</div>
+          <div class="svc-event-time">${time}</div>
+        </td>
+        <td class="svc-date svc-date-col">${date}</td>
+        <td class="svc-loc svc-location-col${locTone ? ` ${locTone}` : ''}">${locName}</td>
       </tr>`;
     });
 
     if (cemetery) {
-      const addr = escHtml(cemetery.AddressDetails || '');
+      const locTone = locationToneClass(src, cemetery.Name);
       rows.push(`<tr>
-        <td class="svc-type">Final Resting Place</td>
-        <td class="svc-date"></td>
-        <td class="svc-time"></td>
-        <td class="svc-loc">${escHtml(cemetery.Name || '')}${addr ? `<div class="svc-addr">${addr}</div>` : ''}</td>
+        <td class="svc-event">
+          <div class="svc-type">Final Resting Place</div>
+        </td>
+        <td class="svc-date svc-date-col"></td>
+        <td class="svc-loc svc-location-col${locTone ? ` ${locTone}` : ''}">${escHtml(cemetery.Name || '')}</td>
       </tr>`);
     }
 
     if (!rows.length) return '<div class="svc-detail-error">No service events found.</div>';
 
     return `<table class="svc-table">
-      <thead><tr><th>Event</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+      <thead><tr><th>Event</th><th>Date</th><th>Location</th></tr></thead>
       <tbody>${rows.join('')}</tbody>
     </table>`;
   }
 
-  function attachServiceDetails(bodyEl, src) {
-    bodyEl.querySelectorAll('.svc-detail-trigger').forEach(details => {
-      details.addEventListener('toggle', async function onToggle() {
-        if (!this.open) return;
-        this.removeEventListener('toggle', onToggle);
-        const body = this.querySelector('.obit-detail-body');
-        const obId = this.dataset.obId;
-        body.innerHTML = '<div class="svc-detail-loading">Loading...</div>';
-        try {
-          const res = await fetch(`/api/obituary-info?obituaryId=${encodeURIComponent(obId)}&src=${encodeURIComponent(src)}`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const { services, cemetery } = await res.json();
-          body.innerHTML = renderServiceTable(services, cemetery);
-        } catch (err) {
-          body.innerHTML = `<div class="svc-detail-error">Could not load: ${escHtml(err.message)}</div>`;
-        }
-      });
+  function attachServiceDetails(bodyEl, src, metaById) {
+    bodyEl.querySelectorAll('.svc-detail-body[data-ob-id]').forEach(async body => {
+      const obId = body.dataset.obId;
+      body.innerHTML = '<div class="svc-detail-loading">Loading...</div>';
+      try {
+        const meta = metaById.get(String(obId)) || buildObituaryMeta(src, await getObituaryInfo(obId, src));
+        addServiceDates(src, meta.services);
+        body.innerHTML = renderServiceTable(meta.services, meta.cemetery, src);
+      } catch (err) {
+        body.innerHTML = `<div class="svc-detail-error">Could not load: ${escHtml(err.message)}</div>`;
+      }
     });
   }
 
@@ -646,14 +686,11 @@
       .map(p => p.textContent.trim()).filter(t => t.length > 0).join('\n\n');
   }
 
-  function renderCard(obit, now, highlight, baseUrl) {
+  function renderCard(obit, highlight, baseUrl) {
     const death     = parseDate(obit.DeathDate);
-    const lastSvc   = parseDate(obit.LastServiceDate);
-    const hasRecent = isRecent(lastSvc, now);
     const age       = calcAge(obit.BirthDate, obit.DeathDate);
     const thumb     = thumbnailUrl(obit);
     const url       = baseUrl ? obituaryUrl(obit, baseUrl) : (obit.StoreUrl || '#');
-    const lines     = serviceLines(obit.Description);
 
     const metaParts = [];
     if (death) metaParts.push(`Died ${fmt(death)}`);
@@ -664,18 +701,10 @@
       ? `<img class="obit-photo" src="${escHtml(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'">`
       : '';
 
-    // Highlighted service sentences
-    let svcHtml = '';
-    if (lines.length > 0) {
-      const lineHtml = lines.map(l => `<div class="svc-line">${highlightServiceText(l)}</div>`).join('');
-      svcHtml = `<div class="svc-lines">${lineHtml}</div>`;
-    }
-
-    // Service Details collapsible (lazy-loaded)
-    const detailSection = `<details class="obit-detail svc-detail-trigger" data-ob-id="${escHtml(String(obit.Id))}">
-      <summary>Service Details</summary>
-      <div class="obit-detail-body"></div>
-    </details>`;
+    const detailSection = `<div class="obit-detail">
+      <div class="obit-detail-label">Service Details</div>
+      <div class="obit-detail-body svc-detail-body" data-ob-id="${escHtml(String(obit.Id))}"></div>
+    </div>`;
 
     // Full Obituary collapsible
     const fullText = descriptionToText(obit.Description);
@@ -688,7 +717,7 @@
 
     const name = escHtml(obit.FullName || `${obit.FirstName || ''} ${obit.LastName || ''}`.trim());
 
-    return `<div class="obit-card${highlight && hasRecent ? ' recent' : ''}">
+    return `<div class="obit-card${highlight ? ' recent' : ''}">
       <a class="obit-top-link" href="${escHtml(url)}" target="_blank" rel="noopener">
         <div class="obit-header">
           ${photoHtml}
@@ -697,58 +726,97 @@
             <div class="obit-meta">${metaParts.join(' · ')}</div>
           </div>
         </div>
-        ${svcHtml}
       </a>
       ${detailSection}
       ${fullSection}
     </div>`;
   }
 
-  function renderPanel(bodyEl, badgeEl, obituaries, baseUrl, src) {
+  function eventSortTime(service) {
+    const d = parseDate(service?.StartTime);
+    return d ? d.getTime() : Number.NEGATIVE_INFINITY;
+  }
+
+  function sortEventsDesc(services) {
+    return [...services].sort((a, b) => eventSortTime(b) - eventSortTime(a));
+  }
+
+  function hasRecentPriorityEvent(meta, now) {
+    return meta.priorityServices.some(svc => isRecent(parseDate(svc?.StartTime), now));
+  }
+
+  function sortTimeForObituary(obit, meta) {
+    const priority = sortEventsDesc(meta.priorityServices);
+    if (priority.length > 0) return eventSortTime(priority[0]);
+
+    const source = sortEventsDesc(meta.sourceServices);
+    if (source.length > 0) return eventSortTime(source[0]);
+
+    const death = parseDate(obit.DeathDate);
+    return death ? death.getTime() : Number.NEGATIVE_INFINITY;
+  }
+
+  function renderPanel(panelEl, bodyEl, badgeEl, obituaries, metaById, baseUrl, src) {
     const now = new Date();
     now.setHours(23, 59, 59, 999);
 
     const relevant = obituaries
       .filter(o => isWithinLookback(parseDate(o.DeathDate), now))
-      .sort((a, b) => (parseDate(b.DeathDate) || 0) - (parseDate(a.DeathDate) || 0));
+      .map(obit => {
+        const meta = metaById.get(String(obit.Id)) || { services: [], cemetery: null, sourceServices: [], priorityServices: [] };
+        return {
+          obit,
+          meta,
+          highlight: hasRecentPriorityEvent(meta, now),
+          sortTime: sortTimeForObituary(obit, meta),
+        };
+      })
+      .sort((a, b) => b.sortTime - a.sortTime);
 
-    const recentCount = relevant.filter(o => isRecent(parseDate(o.LastServiceDate), now)).length;
-    badgeEl.textContent = recentCount > 0
-      ? `${recentCount} service${recentCount > 1 ? 's' : ''} this week`
-      : 'No services this week';
-    badgeEl.className = 'summary-badge ' + (recentCount > 0 ? 'alert' : 'clean');
+    const recentDeaths = relevant.filter(item => isRecent(parseDate(item.obit.DeathDate), now)).length;
+    badgeEl.textContent = recentDeaths > 0
+      ? `${recentDeaths} at this location`
+      : '0 at this location';
+    badgeEl.className = `summary-badge ${sourceTone(src)} ${recentDeaths > 0 ? 'alert' : 'clean'}`;
 
     if (relevant.length === 0) {
       bodyEl.innerHTML = '<div class="empty-state">No recent obituaries found.</div>';
       return;
     }
 
-    const thisWeek = relevant.filter(o => isRecent(parseDate(o.LastServiceDate), now));
-    const older    = relevant.filter(o => !isRecent(parseDate(o.LastServiceDate), now));
+    const priority = relevant.filter(item => item.highlight);
+    const older    = relevant.filter(item => !item.highlight);
 
     let html = '';
-    if (thisWeek.length > 0) {
-      html += '<div class="week-section-label">Services This Week</div><div class="obit-list">';
-      for (const o of thisWeek) html += renderCard(o, now, true, baseUrl);
+    if (priority.length > 0) {
+      html += '<div class="week-section-label">Service / Visitation Here</div><div class="obit-list">';
+      for (const item of priority) html += renderCard(item.obit, true, baseUrl);
       html += '</div>';
     }
     if (older.length > 0) {
-      html += '<div class="older-section-label">Older (past 30 days)</div><div class="obit-list">';
-      for (const o of older) html += renderCard(o, now, false, baseUrl);
+      html += '<div class="older-section-label">Other Recent Obituaries</div><div class="obit-list">';
+      for (const item of older) html += renderCard(item.obit, false, baseUrl);
       html += '</div>';
     }
     bodyEl.innerHTML = html;
-    attachServiceDetails(bodyEl, src);
+    attachServiceDetails(bodyEl, src, metaById);
   }
 
-  async function loadPanel(endpoint, bodyEl, badgeEl, baseUrl, src) {
+  async function loadPanel(endpoint, panelEl, bodyEl, badgeEl, baseUrl, src) {
     try {
       const res  = await fetch(endpoint);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
-      renderPanel(bodyEl, badgeEl, list, baseUrl, src);
-      addServiceDates(list);
+      const lookbackList = list.filter(o => isWithinLookback(parseDate(o.DeathDate), new Date()));
+      const metaEntries = await Promise.all(lookbackList.map(async obit => {
+        const info = await getObituaryInfo(obit.Id, src);
+        const meta = buildObituaryMeta(src, info);
+        addServiceDates(src, meta.services);
+        return [String(obit.Id), meta];
+      }));
+      const metaById = new Map(metaEntries);
+      renderPanel(panelEl, bodyEl, badgeEl, list, metaById, baseUrl, src);
     } catch (err) {
       bodyEl.innerHTML = `<div class="error-state">Error: ${escHtml(err.message)}</div>`;
       badgeEl.textContent = 'Error';
@@ -769,8 +837,8 @@
     });
   });
 
-  loadPanel('/api/oakley-cook', document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/', 'oakley-cook');
-  loadPanel('/api/akard',       document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/', 'akard');
+  loadPanel('/api/oakley-cook', document.querySelector('.oc-panel'), document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/', 'oakley-cook');
+  loadPanel('/api/akard',       document.querySelector('.ak-panel'), document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/', 'akard');
 </script>
 </body>
 </html>
