@@ -2,6 +2,7 @@ const TRIBUTE_API = 'https://api.secure.tributecenteronline.com/ClientApi';
 const DOMAIN_IDS = {
   akard:        '67518621-83f9-4a0d-aa33-7b11c4c73ce9',
   'oakley-cook': 'ac386460-9069-4d71-8a48-0a6ab1f5f511',
+  'oak-hill':    '71db2950-dc10-4a1b-8c2c-98d8a6ad0a03',
 };
 
 export async function onRequestGet({ request }) {

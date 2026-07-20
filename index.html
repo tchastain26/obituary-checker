@@ -35,6 +35,9 @@
       --oc: #F87171;
       --oc-bg: rgba(248,113,113,0.14);
       --oc-border: rgba(248,113,113,0.34);
+      --oh: #FBBF24;
+      --oh-bg: rgba(251,191,36,0.14);
+      --oh-border: rgba(251,191,36,0.34);
       --blue: #60A5FA;
       --teal: #2DD4BF;
     }
@@ -66,6 +69,9 @@
         --oc: #DC2626;
         --oc-bg: rgba(220,38,38,0.10);
         --oc-border: rgba(220,38,38,0.26);
+        --oh: #B45309;
+        --oh-bg: rgba(180,83,9,0.10);
+        --oh-border: rgba(180,83,9,0.26);
       }
     }
 
@@ -91,22 +97,31 @@
       max-width: 1160px; margin: 0 auto;
       display: grid; gap: 20px;
       grid-template-columns: 1fr;
-      grid-template-areas: "cal" "oc" "ak";
+      grid-template-areas: "cal" "oc" "ak" "oh";
     }
 
     /* Tablet: calendar spans top, panels side-by-side */
     @media (min-width: 641px) {
       .page-grid {
         grid-template-columns: 1fr 1fr;
-        grid-template-areas: "cal cal" "oc ak";
+        grid-template-areas: "cal cal" "oc ak" "oh oh";
+      }
+    }
+
+    /* Large tablet: three funeral home panels below calendar */
+    @media (min-width: 1000px) {
+      .page-grid {
+        max-width: 1460px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-areas: "cal cal cal" "oc ak oh";
       }
     }
 
     /* Desktop: panels + sticky calendar sidebar */
-    @media (min-width: 900px) {
+    @media (min-width: 1240px) {
       .page-grid {
-        grid-template-columns: 1fr 1fr 240px;
-        grid-template-areas: "oc ak cal";
+        grid-template-columns: 1fr 1fr 1fr 240px;
+        grid-template-areas: "oc ak oh cal";
       }
       .cal-sidebar {
         position: sticky;
@@ -117,6 +132,7 @@
 
     .oc-panel  { grid-area: oc; }
     .ak-panel  { grid-area: ak; }
+    .oh-panel  { grid-area: oh; }
     .cal-sidebar { grid-area: cal; }
 
     /* ── Panel card ──────────────────────────────────────────────────────── */
@@ -131,6 +147,7 @@
     }
     .panel-oc { border-top-color: var(--oc); }
     .panel-ak { border-top-color: var(--akard); }
+    .panel-oh { border-top-color: var(--oh); }
 
     .panel-header {
       padding: 14px 18px 12px;
@@ -152,6 +169,7 @@
     }
     .panel-oc .panel-title-link { color: var(--oc); }
     .panel-ak .panel-title-link { color: var(--akard); }
+    .panel-oh .panel-title-link { color: var(--oh); }
     .panel-title-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
     .summary-badge {
@@ -162,6 +180,8 @@
     .summary-badge.ak.alert  { background: var(--akard-bg); color: var(--akard); border: 1px solid var(--akard-border); }
     .summary-badge.oc.clean,
     .summary-badge.oc.alert  { background: var(--oc-bg); color: var(--oc); border: 1px solid var(--oc-border); }
+    .summary-badge.oh.clean,
+    .summary-badge.oh.alert  { background: var(--oh-bg); color: var(--oh); border: 1px solid var(--oh-border); }
     .summary-badge.loading { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
     /* Mobile panel collapse */
@@ -185,6 +205,7 @@
     }
     .panel-oc .week-section-label { color: var(--oc); }
     .panel-ak .week-section-label { color: var(--akard); }
+    .panel-oh .week-section-label { color: var(--oh); }
     .older-section-label {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em;
       text-transform: uppercase; color: var(--text-dim); padding: 10px 14px 3px;
@@ -204,6 +225,7 @@
     .obit-card:hover { border-color: var(--border-hover); }
     .panel-oc .obit-card.recent { background: var(--oc-bg); border-color: var(--oc-border); }
     .panel-ak .obit-card.recent { background: var(--akard-bg); border-color: var(--akard-border); }
+    .panel-oh .obit-card.recent { background: var(--oh-bg); border-color: var(--oh-border); }
 
     .obit-top-link {
       display: block; text-decoration: none; color: inherit;
@@ -245,6 +267,7 @@
     .svc-loc   { color: var(--text); }
     .svc-loc-ak { color: var(--akard); font-weight: 600; }
     .svc-loc-oc { color: var(--oc); font-weight: 600; }
+    .svc-loc-oh { color: var(--oh); font-weight: 600; }
 
     /* ── Collapsible sections (shared) ───────────────────────────────────── */
 
@@ -349,6 +372,7 @@
     }
     .cal-dot.ak { background: var(--akard); }
     .cal-dot.oc { background: var(--oc); }
+    .cal-dot.oh { background: var(--oh); }
   </style>
 </head>
 <body>
@@ -387,6 +411,21 @@
     </div>
     <div class="panel-body">
       <div id="ak-body"><div class="loading-state">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ── Oak Hill panel ──────────────────────────────────────────────────── -->
+  <div class="panel oh-panel panel-oh">
+    <div class="panel-header">
+      <img class="fh-logo" src="https://d1q40j6jx1d8h6.cloudfront.net/SiteBuilder/71db2950-dc10-4a1b-8c2c-98d8a6ad0a03/8fd65127-a741-4669-b196-574e81a3f910_thumbnail.webp" alt="Oak Hill logo">
+      <div class="panel-title-group">
+        <a class="panel-title-link" href="https://www.oakhillfh.com/obituaries/obituary-listings" target="_blank" rel="noopener">Oak Hill</a>
+      </div>
+      <span class="summary-badge loading" id="oh-badge">Loading...</span>
+      <span class="panel-chevron">▾</span>
+    </div>
+    <div class="panel-body">
+      <div id="oh-body"><div class="loading-state">Loading...</div></div>
     </div>
   </div>
 
@@ -461,6 +500,7 @@
     serviceDates: {
       akard: new Set(),
       'oakley-cook': new Set(),
+      'oak-hill': new Set(),
     },
   };
 
@@ -478,12 +518,16 @@
     if (!normalized) return false;
     if (src === 'akard') return normalized.includes('akard');
     if (src === 'oakley-cook') return normalized.includes('oakleycook');
+    if (src === 'oak-hill') return normalized.includes('oakhillfuneral');
     return false;
   }
 
   function locationToneClass(src, name) {
     if (!isSourceLocation(src, name)) return '';
-    return src === 'akard' ? 'svc-loc-ak' : 'svc-loc-oc';
+    if (src === 'akard') return 'svc-loc-ak';
+    if (src === 'oakley-cook') return 'svc-loc-oc';
+    if (src === 'oak-hill') return 'svc-loc-oh';
+    return '';
   }
 
   function isCleaningRelevantEvent(name) {
@@ -491,7 +535,10 @@
   }
 
   function sourceTone(src) {
-    return src === 'akard' ? 'ak' : 'oc';
+    if (src === 'akard') return 'ak';
+    if (src === 'oakley-cook') return 'oc';
+    if (src === 'oak-hill') return 'oh';
+    return '';
   }
 
   function addServiceDates(src, services) {
@@ -543,17 +590,20 @@
       const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const hasAk  = serviceDates.akard.has(key);
       const hasOc  = serviceDates['oakley-cook'].has(key);
+      const hasOh  = serviceDates['oak-hill'].has(key);
 
       let cls = 'cal-day';
       if (!current) cls += ' cal-day-other';
       if (wkend)    cls += ' cal-day-weekend';
       if (isToday)  cls += ' cal-day-today';
-      const dotTitle = hasAk && hasOc ? 'Akard and Oakley-Cook service day'
-        : hasAk ? 'Akard service day'
-        : hasOc ? 'Oakley-Cook service day'
-        : '';
-      const dots = (hasAk || hasOc)
-        ? `<div class="cal-dots">${hasAk ? '<span class="cal-dot ak"></span>' : ''}${hasOc ? '<span class="cal-dot oc"></span>' : ''}</div>`
+      const serviceLabels = [
+        hasAk ? 'Akard' : '',
+        hasOc ? 'Oakley-Cook' : '',
+        hasOh ? 'Oak Hill' : '',
+      ].filter(Boolean);
+      const dotTitle = serviceLabels.length ? `${serviceLabels.join(', ')} service day` : '';
+      const dots = serviceLabels.length
+        ? `<div class="cal-dots">${hasAk ? '<span class="cal-dot ak"></span>' : ''}${hasOc ? '<span class="cal-dot oc"></span>' : ''}${hasOh ? '<span class="cal-dot oh"></span>' : ''}</div>`
         : '<div class="cal-dots"></div>';
 
       return `<div class="${cls}" title="${dotTitle}"><span class="cal-day-num">${day}</span>${dots}</div>`;
@@ -839,6 +889,7 @@
 
   loadPanel('/api/oakley-cook', document.querySelector('.oc-panel'), document.getElementById('oc-body'), document.getElementById('oc-badge'), 'https://www.oakley-cook.com/obituaries/', 'oakley-cook');
   loadPanel('/api/akard',       document.querySelector('.ak-panel'), document.getElementById('ak-body'), document.getElementById('ak-badge'), 'https://www.akardfuneralhome.com/obituaries/', 'akard');
+  loadPanel('/api/oak-hill',    document.querySelector('.oh-panel'), document.getElementById('oh-body'), document.getElementById('oh-badge'), 'https://www.oakhillfh.com/obituaries/', 'oak-hill');
 </script>
 </body>
 </html>
