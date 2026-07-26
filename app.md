@@ -43,5 +43,6 @@ After deploying, set the live URL above and add it to the cleaning notes in /71_
 - UI update 2026.05.21 (3): obituary cards now sort by actual Akard/Oakley-Cook service or visitation timing instead of death date, and only obituaries with an in-house Akard/Oakley-Cook service or visitation get highlighted
 - UI update 2026.05.21 (4): header count pills are back, but now they show obituary deaths from the past 7 days for each funeral home so private showings still affect the count
 - UI update 2026.07.20: added Oak Hill panel, API proxy, calendar dot color, and shared service-detail lookup support
+- UI update 2026.07.26: changed Oak Hill's panel, badge, calendar dot, and service-location accent from yellow/brown to blue
 - No environment variables or secrets needed
 - The functions/ directory is deployed alongside the static HTML by wrangler pages
