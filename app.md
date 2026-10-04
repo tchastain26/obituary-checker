@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Shows recent obituaries from Oakley-Cook Funeral Home, Akard Funeral Home, and Oak Hill Funeral Home so Tucker can see at a glance whether there were services in the past week and prepare accordingly for cleaning.
+Shows recent obituaries from Oakley-Cook Funeral Home and Oak Hill Funeral Home so Tucker can see at a glance whether there were services in the past week and prepare accordingly for cleaning.
 
 ## Tech Stack
 
@@ -19,7 +19,6 @@ Shows recent obituaries from Oakley-Cook Funeral Home, Akard Funeral Home, and O
 Both funeral homes use Tribute Technology (tributecenteronline.com). The Pages Functions proxy requests to:
 `https://api.secure.tributecenteronline.com/ClientApi/obituaries/GetObituariesExtended`
 
-- Akard domain ID: 67518621-83f9-4a0d-aa33-7b11c4c73ce9
 - Oakley-Cook domain ID: ac386460-9069-4d71-8a48-0a6ab1f5f511
 - Oak Hill domain ID: 71db2950-dc10-4a1b-8c2c-98d8a6ad0a03
 
@@ -44,5 +43,6 @@ After deploying, set the live URL above and add it to the cleaning notes in /71_
 - UI update 2026.05.21 (4): header count pills are back, but now they show obituary deaths from the past 7 days for each funeral home so private showings still affect the count
 - UI update 2026.07.20: added Oak Hill panel, API proxy, calendar dot color, and shared service-detail lookup support
 - UI update 2026.07.26: changed Oak Hill's panel, badge, calendar dot, and service-location accent from yellow/brown to blue
+- Update 2026.10.04: removed Akard Funeral Home (panel, `/api/akard` proxy, colors, calendar dots, and domain ID). Layout is back to two panels plus the calendar sidebar. The old proxy file is in /90_Robot/Trash/2026.10.04 - Obituary Checker Akard proxy/
 - No environment variables or secrets needed
 - The functions/ directory is deployed alongside the static HTML by wrangler pages
