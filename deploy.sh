@@ -8,4 +8,5 @@ cd "$SCRIPT_DIR"
 mkdir -p public
 cp index.html public/index.html
 cp _headers public/_headers
+cp icons/* public/
 npx --yes wrangler@4.67.0 pages deploy public --project-name obituary-checker "$@"
