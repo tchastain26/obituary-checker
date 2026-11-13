@@ -275,7 +275,6 @@
       font-size: 0.75rem; color: var(--text-muted);
       line-height: 1.65; white-space: pre-wrap;
     }
-    .svc-detail-loading { font-size: 0.75rem; color: var(--text-dim); font-style: italic; }
     .svc-detail-error   { font-size: 0.75rem; color: var(--red); }
 
     .no-services { font-size: 0.75rem; color: var(--text-dim); font-style: italic; padding: 0 12px 10px; }
@@ -437,7 +436,10 @@
     if (m < 0 || (m === 0 && died.getDate() < born.getDate())) age--;
     return age >= 0 ? age : null;
   }
-  function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+  function daysBetween(a, b) {
+    const calendarDay = date => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    return (calendarDay(b) - calendarDay(a)) / 86400000;
+  }
   function isRecent(date, now) {
     if (!date) return false;
     const d = daysBetween(date, now);
@@ -493,7 +495,8 @@
   }
 
   function isCleaningRelevantEvent(name) {
-    return /service|visitation/i.test(String(name || ''));
+    return /service|visitation|funeral|celebration of life/i.test(name || '')
+      && !/graveside|committal|interment|entombment|burial/i.test(name || '');
   }
 
   function sourceTone(src) {
@@ -504,11 +507,10 @@
 
   function addServiceDates(src, services) {
     for (const svc of services || []) {
-      if (!isSourceLocation(src, svc?.ServiceLocation?.Name)) continue;
+      if (!isSourceLocation(src, svc?.ServiceLocation?.Name) || !isCleaningRelevantEvent(svc.ServiceEventName)) continue;
       const d = parseDate(svc.StartTime);
       if (d) addServiceDate(src, d);
     }
-    renderCalendar();
   }
 
   function renderCalendar() {
@@ -610,8 +612,97 @@
     return obituaryInfoCache.get(key);
   }
 
-  function buildObituaryMeta(src, info) {
-    const services = Array.isArray(info?.services) ? info.services : [];
+  const MONTH_NAMES = 'January February March April May June July August September October November December'.split(' ');
+  const SERVICE_DATE = new RegExp(`\\b(${MONTH_NAMES.join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?:,?\\s+(\\d{4}))?`, 'gi');
+  const SERVICE_TIME = /\b(1[0-2]|[1-9])(?::([0-5]\d))?\s*([ap])\.?m\b\.?/gi;
+  const VISITATION = /\b(?:visitation|receive friends|receiving friends)\b/i;
+  const CEREMONY = /\b(?:funeral service|memorial service|celebration of life|funeral)\b/i;
+  const OFFSITE = /\b(?:graveside|committal|interment|entombment|burial|cemetery|memorial park|church)\b/i;
+  const HOME_NAMES = {
+    'oakley-cook': /\bOakley\s*[-–]?\s*Cook\s+(?:Funeral Home|Crematory)\b/i,
+    'oak-hill': /\bOak Hill Funeral(?: Home| and Cremation Services| & Cremation Services)\b/i,
+  };
+
+  function serviceDateFromNotice(match, death) {
+    const month = MONTH_NAMES.findIndex(name => name.toLowerCase() === match[1].toLowerCase());
+    const day = Number(match[2]);
+    let year = match[3] ? Number(match[3]) : death?.getFullYear();
+    if (!year) return null;
+    // December notices often list January services without repeating the year.
+    if (!match[3] && death.getMonth() === 11 && month === 0) year++;
+    const date = new Date(year, month, day);
+    return date.getMonth() === month && date.getDate() === day && (!death || daysBetween(death, date) >= 0)
+      ? isoDate(date) : null;
+  }
+
+  function timeFromNotice(match) {
+    const hour = Number(match[1]) % 12 + (match[3].toLowerCase() === 'p' ? 12 : 0);
+    return `${String(hour).padStart(2, '0')}:${match[2] || '00'}:00`;
+  }
+
+  function servicesFromNotice(src, obit) {
+    const venue = HOME_NAMES[src];
+    const death = parseDate(obit.DeathDate);
+    const events = [];
+    for (const paragraph of descriptionToText(obit.Description).split('\n\n')) {
+      // Keep AM/PM together while separating independent event statements.
+      const sentences = paragraph.split(/(?<!\b[aApP]\.[mM])(?<=[.!?])\s+(?=[A-Z])/);
+      for (const sentence of sentences) {
+        const location = sentence.match(venue);
+        const dates = [...sentence.matchAll(SERVICE_DATE)];
+        const dateMatch = dates.length === 1 && dates[0];
+        if (!location || !dateMatch || OFFSITE.test(sentence) || /\b(?:private|cancelled|canceled|postponed)\b/i.test(sentence)) continue;
+        const date = serviceDateFromNotice(dateMatch, death);
+        if (!date) continue;
+
+        const addEvent = (name, schedule, isVisitation = false) => {
+          const times = [...schedule.matchAll(SERVICE_TIME)];
+          const start = times[0] && timeFromNotice(times[0]);
+          if (!start) return;
+          const end = isVisitation && times[1] && timeFromNotice(times[1]);
+          events.push({
+            ServiceEventName: name[0].toUpperCase() + name.slice(1),
+            StartTime: `${date}T${start}`,
+            EndTime: end && end > start ? `${date}T${end}` : null,
+            ServiceLocation: { Name: location[0] },
+            FromNotice: true,
+          });
+        };
+        const visitation = sentence.match(VISITATION);
+        const eventText = sentence.replace(venue, name => ' '.repeat(name.length));
+        const ceremony = eventText.match(CEREMONY);
+        if (visitation && ceremony && visitation.index < ceremony.index) {
+          const beforeCeremony = sentence.slice(0, ceremony.index);
+          const afterCeremony = sentence.slice(ceremony.index);
+          if (/\b(?:follow(?:ed|ing)?|afterward)\b/i.test(sentence)) {
+            addEvent('Visitation', beforeCeremony, true);
+            addEvent(ceremony[0], afterCeremony);
+          } else {
+            addEvent('Visitation / Service', sentence, true);
+          }
+        } else if (visitation) {
+          addEvent('Visitation', sentence, true);
+        } else if (ceremony) {
+          addEvent(ceremony[0], sentence);
+        }
+      }
+    }
+    return events;
+  }
+
+  function buildObituaryMeta(src, info, noticeEvents) {
+    const services = Array.isArray(info?.services) ? [...info.services] : [];
+    for (const event of noticeEvents) {
+      const alreadyListed = services.some(svc => {
+        if (!isSourceLocation(src, svc?.ServiceLocation?.Name)) return false;
+        const start = parseDate(svc.StartTime);
+        const sameDay = start && isoDate(start) === event.StartTime.slice(0, 10);
+        const sameKind = /visitation/i.test(svc.ServiceEventName) === /visitation/i.test(event.ServiceEventName);
+        return sameDay && sameKind;
+      });
+      if (!alreadyListed) services.push(event);
+    }
+    services.sort((a, b) => eventSortTime(a) - eventSortTime(b));
     const sourceServices = services.filter(svc => isSourceLocation(src, svc?.ServiceLocation?.Name));
     const priorityServices = sourceServices.filter(svc => isCleaningRelevantEvent(svc?.ServiceEventName));
     return {
@@ -627,14 +718,14 @@
       const name  = escHtml(svc.ServiceEventName || '');
       const date  = escHtml(fmtIsoDate(svc.StartTime));
       const start = fmtIsoTime(svc.StartTime);
-      const end   = fmtIsoTime(svc.EndTime);
+      const end   = parseDate(svc.EndTime) > parseDate(svc.StartTime) ? fmtIsoTime(svc.EndTime) : '';
       const time  = escHtml(start && end ? `${start} to ${end}` : start);
       const loc   = svc.ServiceLocation || {};
       const locName = escHtml(loc.Name || '');
       const locTone = locationToneClass(src, loc.Name);
       return `<tr>
         <td class="svc-event">
-          <div class="svc-type">${name}</div>
+          <div class="svc-type">${name}${svc.FromNotice ? ' (from obituary)' : ''}</div>
           <div class="svc-event-time">${time}</div>
         </td>
         <td class="svc-date svc-date-col">${date}</td>
@@ -662,15 +753,11 @@
   }
 
   function attachServiceDetails(bodyEl, src, metaById) {
-    bodyEl.querySelectorAll('.svc-detail-body[data-ob-id]').forEach(async body => {
-      const obId = body.dataset.obId;
-      body.innerHTML = '<div class="svc-detail-loading">Loading...</div>';
-      try {
-        const meta = metaById.get(String(obId)) || buildObituaryMeta(src, await getObituaryInfo(obId, src));
-        addServiceDates(src, meta.services);
-        body.innerHTML = renderServiceTable(meta.services, meta.cemetery, src);
-      } catch (err) {
-        body.innerHTML = `<div class="svc-detail-error">Could not load: ${escHtml(err.message)}</div>`;
+    bodyEl.querySelectorAll('.svc-detail-body[data-ob-id]').forEach(body => {
+      const meta = metaById.get(body.dataset.obId);
+      body.innerHTML = renderServiceTable(meta.services, meta.cemetery, src);
+      if (meta.error) {
+        body.insertAdjacentHTML('beforeend', '<div class="svc-detail-error">The funeral home’s service feed could not load for this obituary.</div>');
       }
     });
   }
@@ -767,12 +854,12 @@
 
   function renderPanel(panelEl, bodyEl, badgeEl, obituaries, metaById, baseUrl, src) {
     const now = new Date();
-    now.setHours(23, 59, 59, 999);
 
     const relevant = obituaries
-      .filter(o => isWithinLookback(parseDate(o.DeathDate), now))
+      .filter(o => isWithinLookback(parseDate(o.DeathDate), now)
+        || metaById.get(String(o.Id)).sourceServices.some(svc => isWithinLookback(parseDate(svc.StartTime), now)))
       .map(obit => {
-        const meta = metaById.get(String(obit.Id)) || { services: [], cemetery: null, sourceServices: [], priorityServices: [] };
+        const meta = metaById.get(String(obit.Id));
         return {
           obit,
           meta,
@@ -817,15 +904,31 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.Obituaries || data.obituaries || []);
-      const lookbackList = list.filter(o => isWithinLookback(parseDate(o.DeathDate), new Date()));
-      const metaEntries = await Promise.all(lookbackList.map(async obit => {
-        const info = await getObituaryInfo(obit.Id, src);
-        const meta = buildObituaryMeta(src, info);
-        addServiceDates(src, meta.services);
-        return [String(obit.Id), meta];
-      }));
-      const metaById = new Map(metaEntries);
-      renderPanel(panelEl, bodyEl, badgeEl, list, metaById, baseUrl, src);
+      const now = new Date();
+      const candidates = list.map(obit => ({ obit, noticeEvents: servicesFromNotice(src, obit) }))
+        .filter(({ obit, noticeEvents }) => {
+          const lastService = parseDate(obit.LastServiceDate);
+          return isWithinLookback(parseDate(obit.DeathDate), now)
+            || (lastService && daysBetween(lastService, now) <= LOOKBACK_DAYS)
+            || noticeEvents.some(event => daysBetween(parseDate(event.StartTime), now) <= LOOKBACK_DAYS);
+        });
+      const metaById = new Map();
+      for (let offset = 0; offset < candidates.length; offset += 8) {
+        await Promise.all(candidates.slice(offset, offset + 8).map(async ({ obit, noticeEvents }) => {
+          let info;
+          try {
+            info = await getObituaryInfo(obit.Id, src);
+          } catch {
+            info = { error: true };
+          }
+          const meta = buildObituaryMeta(src, info, noticeEvents);
+          meta.error = info.error;
+          metaById.set(String(obit.Id), meta);
+          addServiceDates(src, meta.services);
+        }));
+      }
+      renderCalendar();
+      renderPanel(panelEl, bodyEl, badgeEl, candidates.map(({ obit }) => obit), metaById, baseUrl, src);
     } catch (err) {
       bodyEl.innerHTML = `<div class="error-state">Error: ${escHtml(err.message)}</div>`;
       badgeEl.textContent = 'Error';
