@@ -352,6 +352,9 @@
     }
     .cal-dot.oc { background: var(--oc); }
     .cal-dot.oh { background: var(--oh); }
+    .cal-dot.hollow { width: 5px; height: 5px; background: transparent; }
+    .cal-dot.hollow.oc { box-shadow: inset 0 0 0 1px var(--oc); }
+    .cal-dot.hollow.oh { box-shadow: inset 0 0 0 1px var(--oh); }
   </style>
 </head>
 <body>
@@ -468,6 +471,11 @@
       'oakley-cook': new Set(),
       'oak-hill': new Set(),
     },
+    // Graveside-only events (committal, interment, burial): shown as a hollow dot.
+    gravesideDates: {
+      'oakley-cook': new Set(),
+      'oak-hill': new Set(),
+    },
   };
 
   function addServiceDate(src, date) {
@@ -505,16 +513,22 @@
     return '';
   }
 
+  function isGravesideEvent(name) {
+    return /graveside|committal|interment|entombment|burial/i.test(name || '');
+  }
+
   function addServiceDates(src, services) {
     for (const svc of services || []) {
-      if (!isSourceLocation(src, svc?.ServiceLocation?.Name) || !isCleaningRelevantEvent(svc.ServiceEventName)) continue;
+      if (!isSourceLocation(src, svc?.ServiceLocation?.Name)) continue;
       const d = parseDate(svc.StartTime);
-      if (d) addServiceDate(src, d);
+      if (!d) continue;
+      if (isCleaningRelevantEvent(svc.ServiceEventName)) addServiceDate(src, d);
+      else if (isGravesideEvent(svc.ServiceEventName) && calState.gravesideDates[src]) calState.gravesideDates[src].add(isoDate(d));
     }
   }
 
   function renderCalendar() {
-    const { year, month, serviceDates } = calState;
+    const { year, month, serviceDates, gravesideDates } = calState;
     const today = new Date();
 
     document.getElementById('cal-month-label').textContent =
@@ -553,6 +567,9 @@
       const key    = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const hasOc  = serviceDates['oakley-cook'].has(key);
       const hasOh  = serviceDates['oak-hill'].has(key);
+      // A service day wins over a graveside day for the same home.
+      const graveOc = !hasOc && gravesideDates['oakley-cook'].has(key);
+      const graveOh = !hasOh && gravesideDates['oak-hill'].has(key);
 
       let cls = 'cal-day';
       if (!current) cls += ' cal-day-other';
@@ -562,10 +579,18 @@
         hasOc ? 'Oakley-Cook' : '',
         hasOh ? 'Oak Hill' : '',
       ].filter(Boolean);
-      const dotTitle = serviceLabels.length ? `${serviceLabels.join(', ')} service day` : '';
-      const dots = serviceLabels.length
-        ? `<div class="cal-dots">${hasOc ? '<span class="cal-dot oc"></span>' : ''}${hasOh ? '<span class="cal-dot oh"></span>' : ''}</div>`
-        : '<div class="cal-dots"></div>';
+      const graveLabels = [
+        graveOc ? 'Oakley-Cook' : '',
+        graveOh ? 'Oak Hill' : '',
+      ].filter(Boolean);
+      const dotTitle = [
+        serviceLabels.length ? `${serviceLabels.join(', ')} service day` : '',
+        graveLabels.length ? `${graveLabels.join(', ')} graveside only` : '',
+      ].filter(Boolean).join('; ');
+      const dots = `<div class="cal-dots">`
+        + (hasOc ? '<span class="cal-dot oc"></span>' : graveOc ? '<span class="cal-dot hollow oc"></span>' : '')
+        + (hasOh ? '<span class="cal-dot oh"></span>' : graveOh ? '<span class="cal-dot hollow oh"></span>' : '')
+        + '</div>';
 
       return `<div class="${cls}" title="${dotTitle}"><span class="cal-day-num">${day}</span>${dots}</div>`;
     }).join('');

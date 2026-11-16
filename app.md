@@ -46,3 +46,4 @@ After deploying, set the live URL above and add it to the cleaning notes in /71_
 - Update 2026.10.04: removed Akard Funeral Home (panel, `/api/akard` proxy, colors, calendar dots, and domain ID). Layout is back to two panels plus the calendar sidebar. The old proxy file is in /90_Robot/Trash/2026.10.04 - Obituary Checker Akard proxy/
 - No environment variables or secrets needed
 - The functions/ directory is deployed alongside the static HTML by wrangler pages
+- UI update 2026.11.15: graveside-only days (committal, interment, burial, entombment at the home's own location) now show a hollow dot in the home's color. Days with an in-house service or visitation still show the solid dot, and the solid dot wins when both fall on the same day.
